@@ -30,7 +30,9 @@ import {
  * guided 提示全開，solo 要自己按「卡住了」，transfer 完全沒有提示。
  *
  * 傳照片/聯絡人/貼圖/預設回覆這些新互動全部不呼叫 onDone —
- * 唯一會過關的動作，仍然只有長按麥克風送出語音。
+ * 會過關的動作只有兩條並行路徑，同一時刻只有 lesson.target.node 指定的
+ * 那一條算數：長按麥克風送出語音（node === 'mic'），
+ * 或點頂部視訊圖示（node === 'video' 且 gesture === 'tap'）。
  */
 
 type Panel = 'none' | 'attachMenu' | 'photoPicker' | 'contactPicker' | 'stickerPanel';
@@ -167,6 +169,10 @@ export default function ChatSim({
     if (timer.current) clearInterval(timer.current);
     timer.current = null;
     setRecording(false);
+    if (lesson.target.node !== 'mic') {
+      handleWrongTap();
+      return;
+    }
     const secs = Math.max(1, seconds);
     setSent((prev) => [
       ...prev,
@@ -182,6 +188,15 @@ export default function ChatSim({
    */
   function handleWrongTap() {
     setWrongTaps((n) => n + 1);
+  }
+
+  function pressVideo() {
+    if (lesson.target.node === 'video' && lesson.target.gesture === 'tap') {
+      setSucceeded(true);
+      setTimeout(onDone, 1200);
+      return;
+    }
+    handleWrongTap();
   }
 
   function handleTooShort() {
@@ -258,7 +273,12 @@ export default function ChatSim({
 
   return (
     <View style={st.wrap}>
-      <SimTopBar contact={script.contact} base={base} onWrongTap={handleWrongTap} />
+      <SimTopBar
+        contact={script.contact}
+        base={base}
+        onWrongTap={handleWrongTap}
+        onPressVideo={pressVideo}
+      />
 
       <View style={st.threadWrap}>
         <ScrollView
@@ -384,7 +404,7 @@ export default function ChatSim({
       {succeeded ? (
         <View style={st.success} pointerEvents="none">
           <T style={[st.successText, { fontSize: fz(base, 1.15), lineHeight: fz(base, 1.6) }]}>
-            送出去了
+            {lesson.target.node === 'video' ? '接通了' : '送出去了'}
           </T>
         </View>
       ) : null}

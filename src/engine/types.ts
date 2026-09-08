@@ -64,3 +64,34 @@ export type MapNode = {
   /** 沒有 lessonId 的節點是還沒製作的內容。刻意不鎖，按了給說明。 */
   lessonId?: string;
 };
+
+/** 頭像圖示只用通用圖案，絕不用真實 App 的官方素材或真人照片。 */
+export type ChatRoomAvatarGlyph = 'chat' | 'sticker' | 'mic' | 'video' | 'camera' | 'alert';
+
+/**
+ * 聊天列表一列的假聯絡人內容，跟 MapNode 用同一組 id 對應。
+ * 純內容資料，不含互動邏輯 — 哪一列可以點由 App.tsx 決定。
+ */
+export type ChatRoomPreview = {
+  id: string;
+  contactName: string;
+  avatarGlyph: ChatRoomAvatarGlyph;
+  avatarColor: string;
+  preview: string;
+  time: string;
+};
+
+/** 目前只有這兩種題型：長按麥克風回語音、點視訊圖示。之後可以再擴充。 */
+export type PracticeKind = 'voiceReply' | 'videoTap';
+
+/**
+ * 綜合練習的一題。scenario 沿用既有 StageScript 形狀（contact/messages/note），
+ * stage 固定填 'transfer'（沒有 coach、卡住了教我按鈕還在）。
+ * target 沿用既有 Target 型別，videoTap 題型會用 { node: 'video', gesture: 'tap' }。
+ */
+export type PracticeQuestion = {
+  id: string;
+  kind: PracticeKind;
+  scenario: StageScript;
+  target: Target;
+};

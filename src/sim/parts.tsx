@@ -45,10 +45,11 @@ const SAMPLE_PHOTOS = [
 ];
 const SAMPLE_CONTACTS = ['陳醫師', '里長', '大兒子', '孫子小宇'];
 
-export function SimTopBar({ contact, base, onWrongTap }: {
+export function SimTopBar({ contact, base, onWrongTap, onPressVideo }: {
   contact: string;
   base: number;
   onWrongTap: () => void;
+  onPressVideo: () => void;
 }) {
   return (
     <View style={s.topBar}>
@@ -57,7 +58,7 @@ export function SimTopBar({ contact, base, onWrongTap }: {
       </Pressable>
       <T style={[s.contact, { fontSize: fz(base, 1), lineHeight: fz(base, 1.4) }]}>{contact}</T>
       <View style={s.topIcons}>
-        <Pressable onPress={onWrongTap} hitSlop={10}>
+        <Pressable onPress={onPressVideo} hitSlop={10}>
           <VideoCam size={fz(base, 1.25)} />
         </Pressable>
         <Pressable onPress={onWrongTap} hitSlop={10}>

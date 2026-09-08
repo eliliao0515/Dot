@@ -3,17 +3,37 @@ import { View, SafeAreaView, StatusBar, Platform, Pressable, StyleSheet } from '
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { ScaleProvider, T, useScale } from './src/ui/Scale';
 import { C, fz } from './src/ui/theme';
-import { LESSONS } from './src/content/lessons';
+import { LESSONS, MAP_NODES, CHAT_ROOMS } from './src/content/lessons';
 import ChatSim from './src/sim/ChatSim';
-import MapScreen from './src/shell/MapScreen';
+import ChatsListScreen, { ChatRoomItem } from './src/sim/ChatsListScreen';
 import { BriefScreen, RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
+import PracticeSession from './src/shell/PracticeSession';
 
 type Route =
-  | { name: 'map' }
+  | { name: 'chats' }
   | { name: 'brief'; lessonId: string }
   | { name: 'sim'; lessonId: string; stageIndex: number }
   | { name: 'realDevice'; lessonId: string }
-  | { name: 'done'; lessonId: string };
+  | { name: 'done'; lessonId: string }
+  | { name: 'practice' };
+
+/**
+ * 聊天列表的假聯絡人內容（CHAT_ROOMS）跟操作狀態（MAP_NODES）分開存放，
+ * 在這裡合併成 ChatsListScreen 純吃的 props，sim 層不用認得 lesson 概念。
+ */
+const CHAT_ROOM_ITEMS: ChatRoomItem[] = MAP_NODES.map((node) => {
+  const room = CHAT_ROOMS.find((r) => r.id === node.id)!;
+  return {
+    id: node.id,
+    title: room.contactName,
+    preview: room.preview,
+    time: room.time,
+    avatarGlyph: room.avatarGlyph,
+    avatarColor: room.avatarColor,
+    emphasized: node.state === 'now',
+    actionable: !!node.lessonId,
+  };
+});
 
 const STAGE_LABEL: Record<string, string> = {
   guided: '帶著做',
@@ -52,7 +72,8 @@ function TeachingFrame({
 }
 
 function Root() {
-  const [route, setRoute] = useState<Route>({ name: 'map' });
+  const { base } = useScale();
+  const [route, setRoute] = useState<Route>({ name: 'chats' });
   const lesson = 'lessonId' in route ? LESSONS[route.lessonId] : undefined;
 
   function advance() {
@@ -69,17 +90,30 @@ function Root() {
     <SafeAreaView style={s.safe}>
       <ExpoStatusBar style="dark" />
 
-      {route.name === 'map' ? (
-        <MapScreen
-          resumeLabel="傳一段語音給女兒"
-          onOpenLesson={(lessonId) => setRoute({ name: 'brief', lessonId })}
+      {route.name === 'chats' ? (
+        <ChatsListScreen
+          rooms={CHAT_ROOM_ITEMS}
+          base={base}
+          pinned={{
+            title: '綜合練習',
+            sub: '隨機出題，複習學過的技能',
+            onPress: () => setRoute({ name: 'practice' }),
+          }}
+          onOpenRoom={(id) => {
+            const node = MAP_NODES.find((n) => n.id === id);
+            if (node?.lessonId) setRoute({ name: 'brief', lessonId: node.lessonId });
+          }}
         />
+      ) : null}
+
+      {route.name === 'practice' ? (
+        <PracticeSession onExit={() => setRoute({ name: 'chats' })} />
       ) : null}
 
       {route.name === 'brief' && lesson ? (
         <BriefScreen
           lesson={lesson}
-          onBack={() => setRoute({ name: 'map' })}
+          onBack={() => setRoute({ name: 'chats' })}
           onStart={() => setRoute({ name: 'sim', lessonId: lesson.id, stageIndex: 0 })}
         />
       ) : null}
@@ -90,7 +124,7 @@ function Root() {
             stageIndex={route.stageIndex}
             total={lesson.stages.length}
             stage={lesson.stages[route.stageIndex].stage}
-            onExit={() => setRoute({ name: 'map' })}
+            onExit={() => setRoute({ name: 'chats' })}
           />
           <ChatSim
             key={`${lesson.id}-${route.stageIndex}`}
@@ -112,8 +146,8 @@ function Root() {
       {route.name === 'done' && lesson ? (
         <DoneScreen
           lesson={lesson}
-          onShare={() => setRoute({ name: 'map' })}
-          onBack={() => setRoute({ name: 'map' })}
+          onShare={() => setRoute({ name: 'chats' })}
+          onBack={() => setRoute({ name: 'chats' })}
         />
       ) : null}
     </SafeAreaView>

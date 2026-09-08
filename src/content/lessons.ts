@@ -1,4 +1,4 @@
-import { Lesson, MapNode } from '../engine/types';
+import { Lesson, MapNode, ChatRoomPreview } from '../engine/types';
 
 /**
  * MVP 只做完整的一課：傳語音訊息。
@@ -76,4 +76,59 @@ export const MAP_NODES: MapNode[] = [
   { id: 'video-call', label: '跟孫子視訊', sub: '還沒開始', state: 'todo' },
   { id: 'save-photo', label: '把照片存起來', sub: '還沒開始', state: 'todo' },
   { id: 'anti-fraud', label: '認出假訊息', sub: '還沒開始', state: 'todo' },
+];
+
+/**
+ * 聊天列表根頁面用的假聯絡人內容，跟 MAP_NODES 用同一組 id 一一對應。
+ * 純情境內容（人物、預覽文字、時間標籤），不影響任何操作路徑或正確答案。
+ */
+export const CHAT_ROOMS: ChatRoomPreview[] = [
+  {
+    id: 'read-reply',
+    contactName: '美惠',
+    avatarGlyph: 'chat',
+    avatarColor: '#4C8C99',
+    preview: '好啊，禮拜三見面再說',
+    time: '昨天',
+  },
+  {
+    id: 'sticker',
+    contactName: '阿弟',
+    avatarGlyph: 'sticker',
+    avatarColor: '#8C7B4C',
+    preview: '[貼圖]',
+    time: '昨天',
+  },
+  {
+    id: 'voice-msg',
+    contactName: '淑芬',
+    avatarGlyph: 'mic',
+    avatarColor: '#4C7A99',
+    preview: '媽，你晚上幾點會到？我先煮飯等你',
+    time: '現在',
+  },
+  {
+    id: 'video-call',
+    contactName: '小宇（孫子）',
+    avatarGlyph: 'video',
+    avatarColor: '#7A6B99',
+    preview: '阿嬤，我們視訊啦',
+    time: '3 天前',
+  },
+  {
+    id: 'save-photo',
+    contactName: '阿美',
+    avatarGlyph: 'camera',
+    avatarColor: '#5B8C6B',
+    preview: '你看這個高麗菜多少錢一顆',
+    time: '5 天前',
+  },
+  {
+    id: 'anti-fraud',
+    contactName: '客服中心',
+    avatarGlyph: 'alert',
+    avatarColor: '#6B7A99',
+    preview: '您的帳戶異常，請點擊連結確認',
+    time: '上週',
+  },
 ];
