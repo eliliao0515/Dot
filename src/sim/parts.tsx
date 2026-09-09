@@ -36,6 +36,13 @@ function colorFromString(input: string, palette: string[]): string {
   return palette[hash % palette.length];
 }
 
+/** 語音訊息時長顯示，例如 65 秒顯示「1:05」。錄音現在點一下開始/停止，長度不再固定個位數。 */
+function formatDuration(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 const QUICK_REPLIES = ['好', '謝謝', '知道了', '等一下'];
 const SAMPLE_PHOTOS = [
   { id: 'p1', label: '今天的菜' },
@@ -177,7 +184,7 @@ export function MessageRow({
               )}
               <Waveform heights={WAVE} color={mine ? '#22503C' : '#5E7A6C'} />
               <T style={[s.voiceTime, { fontSize: fz(base, 0.78) }, mine && { color: C.chatGreenInk }]}>
-                {playing ? `0:0${playElapsed ?? 0}` : `0:0${msg.seconds}`}
+                {formatDuration(playing ? playElapsed ?? 0 : msg.seconds)}
               </T>
             </Pressable>
           ) : (
@@ -329,28 +336,20 @@ export function StickerPanel({ base, onPick }: {
 
 export function SimInputBar({
   base,
-  recording,
-  minMs,
   onWrongTap,
   onPressPlus,
   onPressSticker,
+  onPressMic,
   attachOpen,
   stickerOpen,
-  onStart,
-  onStop,
-  onTooShort,
 }: {
   base: number;
-  recording: boolean;
-  minMs: number;
   onWrongTap: () => void;
   onPressPlus: () => void;
   onPressSticker: () => void;
+  onPressMic: () => void;
   attachOpen: boolean;
   stickerOpen: boolean;
-  onStart: () => void;
-  onStop: () => void;
-  onTooShort: () => void;
 }) {
   const micSize = fz(base, 2.4);
   return (
@@ -370,17 +369,14 @@ export function SimInputBar({
       </Pressable>
 
       <Pressable
-        delayLongPress={minMs}
-        onLongPress={onStart}
-        onPressOut={() => (recording ? onStop() : undefined)}
-        onPress={onTooShort}
-        // 手抖的人放開時手指常會滑掉，把觸控範圍放寬。
+        onPress={onPressMic}
+        // 手抖的人常按不準，把觸控範圍放寬 — 手勢從長按改成點一下，這件事不受影響。
         hitSlop={14}
         pressRetentionOffset={{ top: 60, bottom: 60, left: 60, right: 60 }}
         style={({ pressed }) => [
           s.mic,
           { width: micSize, height: micSize, borderRadius: micSize / 2 },
-          (pressed || recording) && s.micActive,
+          pressed && s.micActive,
         ]}
       >
         <Mic size={fz(base, 1.2)} />

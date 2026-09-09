@@ -1066,3 +1066,24 @@ export function DownloadTray({ size = 24, color = '#fff', weight = 2 }) {
     </View>
   );
 }
+
+/** 傳送，紙飛機（單色實心三角形）。 */
+export function Send({ size = 24, color = '#4C6FE8' }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          width: 0,
+          height: 0,
+          borderLeftWidth: size * 0.64,
+          borderTopWidth: size * 0.34,
+          borderBottomWidth: size * 0.34,
+          borderLeftColor: color,
+          borderTopColor: 'transparent',
+          borderBottomColor: 'transparent',
+          marginLeft: size * 0.12,
+        }}
+      />
+    </View>
+  );
+}

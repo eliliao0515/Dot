@@ -8,9 +8,9 @@ export const voiceMessageLesson: Lesson = {
   id: 'voice-msg',
   eyebrow: '第 3 課 · 傳語音訊息',
   title: '淑芬問你晚上幾點到',
-  why: '你不用打字，用講的就好。壓著那顆麥克風講話，放開就送出去了。',
+  why: '你不用打字，用講的就好。點麥克風錄音，說完點傳送就送出去了。',
   skillName: '傳語音訊息',
-  target: { node: 'mic', gesture: 'longPress', minMs: 400 },
+  target: { node: 'mic', gesture: 'tap', minMs: 0 },
 
   stages: [
     {
@@ -20,7 +20,7 @@ export const voiceMessageLesson: Lesson = {
         { id: 'g1', from: 'them', kind: 'text', text: '媽，你晚上幾點會到？我先煮飯等你', showName: true },
         { id: 'g2', from: 'them', kind: 'text', text: '要不要我去車站接你' },
       ],
-      coach: '壓著右下角這顆綠色的，講「我七點到」',
+      coach: '點右下角麥克風，錄一句「我七點到」，說完點藍色傳送鍵送出去',
       note: '按錯不會怎麼樣，慢慢來。',
     },
     {
@@ -60,7 +60,7 @@ export const voiceMessageLesson: Lesson = {
 
   done: {
     headline: '你會傳語音訊息了',
-    body: '以後想跟誰說話，壓著綠色那顆講就好，不用打字。',
+    body: '以後想跟誰說話，點麥克風錄音，說完點傳送就好，不用打字。',
     shareWith: '淑芬',
   },
 };

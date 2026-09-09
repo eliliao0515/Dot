@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { T, useScale } from '../ui/Scale';
 import { C, fz } from '../ui/theme';
-import { Speaker, Mic } from '../ui/Icons';
+import { Speaker } from '../ui/Icons';
 import { Bubble, Lesson, StageScript, StickerId } from '../engine/types';
 import {
   SimTopBar,
@@ -25,6 +25,14 @@ import {
   QuickReplyRow,
 } from './parts';
 import PhotoViewer from './PhotoViewer';
+import VoiceRecorder from './VoiceRecorder';
+
+/** 錄音計時格式 mm:ss，例如 7 秒顯示「00:07」，65 秒顯示「01:05」。 */
+function formatElapsed(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
 
 /**
  * 引導層疊在模擬畫面之上，底下的介面一個像素都不改。
@@ -32,9 +40,9 @@ import PhotoViewer from './PhotoViewer';
  *
  * 傳聯絡人這個互動不呼叫 onDone —
  * 會過關的動作是五條並行路徑，同一時刻只有 lesson.target.node 指定的
- * 那一條算數：長按麥克風送出語音（'mic'）、點頂部視訊圖示（'video'）、
- * 點貼圖送出（'sticker'）、在 PhotoViewer 裡點下載存照片（'photo'）、
- * 點任一個預設回覆膠囊（'reply'）。
+ * 那一條算數：在 VoiceRecorder 裡點傳送送出語音（'mic'）、
+ * 點頂部視訊圖示（'video'）、點貼圖送出（'sticker'）、
+ * 在 PhotoViewer 裡點下載存照片（'photo'）、點任一個預設回覆膠囊（'reply'）。
  */
 
 type Panel = 'none' | 'attachMenu' | 'photoPicker' | 'contactPicker' | 'stickerPanel';
@@ -113,7 +121,8 @@ export default function ChatSim({
 }) {
   const { base } = useScale();
   const [sent, setSent] = useState<Bubble[]>([]);
-  const [recording, setRecording] = useState(false);
+  const [recorderOpen, setRecorderOpen] = useState(false);
+  const [recorderPhase, setRecorderPhase] = useState<'idle' | 'recording' | 'stopped'>('idle');
   const [seconds, setSeconds] = useState(0);
   const [wrongTaps, setWrongTaps] = useState(0);
   const [askedForHelp, setAskedForHelp] = useState(false);
@@ -136,7 +145,8 @@ export default function ChatSim({
   // 換一階段就重置，不要把上一階的狀態帶過來。
   useEffect(() => {
     setSent([]);
-    setRecording(false);
+    setRecorderOpen(false);
+    setRecorderPhase('idle');
     setSeconds(0);
     setWrongTaps(0);
     setAskedForHelp(false);
@@ -167,29 +177,62 @@ export default function ChatSim({
 
   const showCoach = script.stage === 'guided' || askedForHelp;
 
-  function startRecording() {
+  /**
+   * 點麥克風開啟全螢幕錄音畫面。取代訊息串顯示區域，不是疊在上面的面板 —
+   * 跟訊息串同一層互斥，輸入列也一起先隱藏。
+   */
+  function openRecorder() {
     setNudge(null);
     setPanel('none');
-    setRecording(true);
     setSeconds(0);
-    timer.current = setInterval(() => setSeconds((n) => Math.min(n + 1, 9)), 1000);
+    setRecorderPhase('idle');
+    setRecorderOpen(true);
   }
 
-  function stopRecording() {
+  function beginRecording() {
+    setRecorderPhase('recording');
+    setSeconds(0);
+    timer.current = setInterval(() => setSeconds((n) => n + 1), 1000);
+  }
+
+  function stopRecordingPhase() {
     if (timer.current) clearInterval(timer.current);
     timer.current = null;
-    setRecording(false);
-    if (lesson.target.node !== 'mic') {
-      handleWrongTap();
-      return;
-    }
+    setRecorderPhase('stopped');
+  }
+
+  /**
+   * 點紙飛機才真正送出。錄音本身（開始/停止/傳送/丟棄）任何課程都能正常用，
+   * 只有 target.node === 'mic' 時這個動作才算過關。
+   */
+  function sendVoiceMessage() {
+    if (timer.current) clearInterval(timer.current);
+    timer.current = null;
     const secs = Math.max(1, seconds);
+    setRecorderOpen(false);
+    setRecorderPhase('idle');
     setSent((prev) => [
       ...prev,
       { id: `voice-${Date.now()}`, from: 'me', kind: 'voice', seconds: secs },
     ]);
-    setSucceeded(true);
-    setTimeout(onDone, 1200);
+    if (lesson.target.node === 'mic') {
+      setSucceeded(true);
+      setTimeout(onDone, 1200);
+    }
+  }
+
+  /** 垃圾桶或右上角關閉都算取消：不送出、不過關，回到正常聊天畫面。 */
+  function discardRecording() {
+    if (timer.current) clearInterval(timer.current);
+    timer.current = null;
+    setRecorderOpen(false);
+    setRecorderPhase('idle');
+    setSeconds(0);
+  }
+
+  /** VoiceRecorder 頂部工具列的裝飾性按鈕。沿用既有 nudge 中性提示，不是答錯。 */
+  function showRecorderHint() {
+    setNudge('這個功能還沒做好。');
   }
 
   /**
@@ -207,11 +250,6 @@ export default function ChatSim({
       return;
     }
     handleWrongTap();
-  }
-
-  function handleTooShort() {
-    // 點一下不夠。這是長輩最常見的失敗，要用中性的話糾正。
-    setNudge('壓著不要放開，講完話再放手');
   }
 
   function scheduleRead(id: string) {
@@ -304,11 +342,9 @@ export default function ChatSim({
   }
 
   function pressPlus() {
-    if (recording) return;
     setPanel((p) => (p === 'attachMenu' ? 'none' : 'attachMenu'));
   }
   function pressSticker() {
-    if (recording) return;
     setPanel((p) => (p === 'stickerPanel' ? 'none' : 'stickerPanel'));
   }
 
@@ -324,134 +360,136 @@ export default function ChatSim({
         onPressVideo={pressVideo}
       />
 
-      <View style={st.threadWrap}>
-        <ScrollView
-          ref={scroller}
-          style={st.thread}
-          contentContainerStyle={st.threadInner}
-          onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: true })}
-        >
-          {script.messages.map((m) => (
-            <MessageRow
-              key={m.id}
-              msg={m}
-              contact={script.contact}
-              base={base}
-              playingId={playingId}
-              playElapsed={playElapsed}
-              onTogglePlay={togglePlay}
-              onOpenPhoto={openPhoto}
-            />
-          ))}
-          {sent.map((m) => (
-            <MessageRow
-              key={m.id}
-              msg={m}
-              contact={script.contact}
-              base={base}
-              playingId={playingId}
-              playElapsed={playElapsed}
-              onTogglePlay={togglePlay}
-              onOpenPhoto={openPhoto}
-            />
-          ))}
-          {lastSent && readIds.has(lastSent.id) ? <ReadReceipt base={base} /> : null}
-        </ScrollView>
-
-        {/* solo 階段的求助鍵。永遠在，但不會自己跳出來。掛在對話串這一層，
-            不管底下的 note/預設回覆/輸入列疊了多高都不會被擠到。 */}
-        {script.stage !== 'guided' && !askedForHelp && !recording && !succeeded ? (
-          <Pressable
-            onPress={() => setAskedForHelp(true)}
-            hitSlop={12}
-            style={[st.helpBtn, helpIsBig && st.helpBtnBig]}
-          >
-            <T
-              style={[
-                st.helpText,
-                { fontSize: fz(base, helpIsBig ? 1 : 0.88), lineHeight: fz(base, 1.4) },
-              ]}
+      {recorderOpen ? (
+        <View style={st.recorderSlot}>
+          <VoiceRecorder
+            phase={recorderPhase}
+            elapsedLabel={formatElapsed(seconds)}
+            onStartRecording={beginRecording}
+            onStopRecording={stopRecordingPhase}
+            onSend={sendVoiceMessage}
+            onDiscard={discardRecording}
+            onClose={discardRecording}
+            onTopBarAction={showRecorderHint}
+          />
+        </View>
+      ) : (
+        <>
+          <View style={st.threadWrap}>
+            <ScrollView
+              ref={scroller}
+              style={st.thread}
+              contentContainerStyle={st.threadInner}
+              onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: true })}
             >
-              卡住了，教我
-            </T>
-          </Pressable>
-        ) : null}
-      </View>
+              {script.messages.map((m) => (
+                <MessageRow
+                  key={m.id}
+                  msg={m}
+                  contact={script.contact}
+                  base={base}
+                  playingId={playingId}
+                  playElapsed={playElapsed}
+                  onTogglePlay={togglePlay}
+                  onOpenPhoto={openPhoto}
+                />
+              ))}
+              {sent.map((m) => (
+                <MessageRow
+                  key={m.id}
+                  msg={m}
+                  contact={script.contact}
+                  base={base}
+                  playingId={playingId}
+                  playElapsed={playElapsed}
+                  onTogglePlay={togglePlay}
+                  onOpenPhoto={openPhoto}
+                />
+              ))}
+              {lastSent && readIds.has(lastSent.id) ? <ReadReceipt base={base} /> : null}
+            </ScrollView>
 
-      {panel === 'attachMenu' && !recording && !succeeded ? (
-        <AttachMenu
-          base={base}
-          onSelectPhoto={() => setPanel('photoPicker')}
-          onSelectContact={() => setPanel('contactPicker')}
-        />
-      ) : null}
-      {panel === 'photoPicker' ? (
-        <PhotoPicker base={base} onPick={sendPhoto} onCancel={() => setPanel('none')} />
-      ) : null}
-      {panel === 'contactPicker' ? (
-        <ContactPicker base={base} onPick={sendContact} onCancel={() => setPanel('none')} />
-      ) : null}
-      {panel === 'stickerPanel' ? <StickerPanel base={base} onPick={sendSticker} /> : null}
-
-      {showCoach && !succeeded && panel === 'none' ? (
-        <View style={st.coach}>
-          <Speaker size={fz(base, 1.3)} />
-          <View style={st.coachBody}>
-            <T style={[st.coachText, { fontSize: fz(base, 1.02), lineHeight: fz(base, 1.55) }]}>
-              {lesson.stages[0].coach}
-            </T>
-            <T style={[st.coachReplay, { fontSize: fz(base, 0.8), lineHeight: fz(base, 1.3) }]}>
-              再念一次
-            </T>
+            {/* solo 階段的求助鍵。永遠在，但不會自己跳出來。掛在對話串這一層，
+                不管底下的 note/預設回覆/輸入列疊了多高都不會被擠到。 */}
+            {script.stage !== 'guided' && !askedForHelp && !succeeded ? (
+              <Pressable
+                onPress={() => setAskedForHelp(true)}
+                hitSlop={12}
+                style={[st.helpBtn, helpIsBig && st.helpBtnBig]}
+              >
+                <T
+                  style={[
+                    st.helpText,
+                    { fontSize: fz(base, helpIsBig ? 1 : 0.88), lineHeight: fz(base, 1.4) },
+                  ]}
+                >
+                  卡住了，教我
+                </T>
+              </Pressable>
+            ) : null}
           </View>
-        </View>
-      ) : null}
 
-      {!showCoach && !recording && !succeeded && panel === 'none' ? (
-        <View style={st.note} pointerEvents="none">
-          <T style={[st.noteText, { fontSize: fz(base, 0.82), lineHeight: fz(base, 1.45) }]}>
-            {script.note}
-          </T>
-        </View>
-      ) : null}
+          {panel === 'attachMenu' && !succeeded ? (
+            <AttachMenu
+              base={base}
+              onSelectPhoto={() => setPanel('photoPicker')}
+              onSelectContact={() => setPanel('contactPicker')}
+            />
+          ) : null}
+          {panel === 'photoPicker' ? (
+            <PhotoPicker base={base} onPick={sendPhoto} onCancel={() => setPanel('none')} />
+          ) : null}
+          {panel === 'contactPicker' ? (
+            <ContactPicker base={base} onPick={sendContact} onCancel={() => setPanel('none')} />
+          ) : null}
+          {panel === 'stickerPanel' ? <StickerPanel base={base} onPick={sendSticker} /> : null}
 
-      {/* reply 課的建議訊息就是過關目標本體，跟麥克風/貼圖鍵一樣不受 showCoach 影響 —
-          guided 階段的教練文字說「看下面幾個現成的話」，這排膠囊得跟著一起顯示才點得到。 */}
-      {lesson.target.node === 'reply' && !recording && !succeeded && panel === 'none' ? (
-        <QuickReplyRow base={base} onPick={sendText} />
-      ) : null}
+          {showCoach && !succeeded && panel === 'none' ? (
+            <View style={st.coach}>
+              <Speaker size={fz(base, 1.3)} />
+              <View style={st.coachBody}>
+                <T style={[st.coachText, { fontSize: fz(base, 1.02), lineHeight: fz(base, 1.55) }]}>
+                  {lesson.stages[0].coach}
+                </T>
+                <T style={[st.coachReplay, { fontSize: fz(base, 0.8), lineHeight: fz(base, 1.3) }]}>
+                  再念一次
+                </T>
+              </View>
+            </View>
+          ) : null}
 
-      <SimInputBar
-        base={base}
-        recording={recording}
-        minMs={lesson.target.minMs}
-        onWrongTap={handleWrongTap}
-        onPressPlus={pressPlus}
-        onPressSticker={pressSticker}
-        attachOpen={panel === 'attachMenu' || panel === 'photoPicker' || panel === 'contactPicker'}
-        stickerOpen={panel === 'stickerPanel'}
-        onStart={startRecording}
-        onStop={stopRecording}
-        onTooShort={handleTooShort}
-      />
+          {!showCoach && !succeeded && panel === 'none' ? (
+            <View style={st.note} pointerEvents="none">
+              <T style={[st.noteText, { fontSize: fz(base, 0.82), lineHeight: fz(base, 1.45) }]}>
+                {script.note}
+              </T>
+            </View>
+          ) : null}
 
-      {showCoach &&
-      !recording &&
-      !succeeded &&
-      panel === 'none' &&
-      (lesson.target.node === 'mic' || lesson.target.node === 'sticker') ? (
-        <GuideRing base={base} node={lesson.target.node} />
-      ) : null}
+          {/* reply 課的建議訊息就是過關目標本體，跟麥克風/貼圖鍵一樣不受 showCoach 影響 —
+              guided 階段的教練文字說「看下面幾個現成的話」，這排膠囊得跟著一起顯示才點得到。 */}
+          {lesson.target.node === 'reply' && !succeeded && panel === 'none' ? (
+            <QuickReplyRow base={base} onPick={sendText} />
+          ) : null}
 
-      {/* 錄音中的回饋。用文字和秒數，不用會嚇到人的紅點。 */}
-      {recording ? (
-        <View style={st.recording} pointerEvents="none">
-          <Mic size={fz(base, 1.2)} color="#fff" />
-          <T style={[st.recordingText, { fontSize: fz(base, 1), lineHeight: fz(base, 1.5) }]}>
-            {`錄音中 ${seconds} 秒　放開就送出`}
-          </T>
-        </View>
-      ) : null}
+          <SimInputBar
+            base={base}
+            onWrongTap={handleWrongTap}
+            onPressPlus={pressPlus}
+            onPressSticker={pressSticker}
+            onPressMic={openRecorder}
+            attachOpen={panel === 'attachMenu' || panel === 'photoPicker' || panel === 'contactPicker'}
+            stickerOpen={panel === 'stickerPanel'}
+          />
+
+          {showCoach &&
+          !succeeded &&
+          panel === 'none' &&
+          (lesson.target.node === 'mic' || lesson.target.node === 'sticker') ? (
+            <GuideRing base={base} node={lesson.target.node} />
+          ) : null}
+        </>
+      )}
 
       {succeeded ? (
         <View style={st.success} pointerEvents="none">
@@ -482,7 +520,7 @@ export default function ChatSim({
         />
       ) : null}
 
-      {nudge && !recording && !succeeded && panel === 'none' ? (
+      {nudge && !succeeded && panel === 'none' ? (
         <View style={st.nudge} pointerEvents="none">
           <T style={[st.nudgeText, { fontSize: fz(base, 0.92), lineHeight: fz(base, 1.5) }]}>
             {nudge}
@@ -524,19 +562,8 @@ const st = StyleSheet.create({
   },
   noteText: { color: '#fff', textAlign: 'center', fontWeight: '500' },
 
-  recording: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: C.indigoDark,
-    paddingHorizontal: 18,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  recordingText: { color: '#fff', fontWeight: '700' },
+  // VoiceRecorder 取代訊息串顯示區域，不是疊在上面的小面板 — 給它跟 threadWrap 一樣的 flex:1。
+  recorderSlot: { flex: 1 },
 
   success: {
     position: 'absolute',

@@ -17,7 +17,7 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       ],
       note: '這一題沒有提示，想不起來就按「卡住了」。',
     },
-    target: { node: 'mic', gesture: 'longPress', minMs: 400 },
+    target: { node: 'mic', gesture: 'tap', minMs: 0 },
   },
   {
     id: 'pq-2',
@@ -30,7 +30,7 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       ],
       note: '這一題沒有提示，想不起來就按「卡住了」。',
     },
-    target: { node: 'mic', gesture: 'longPress', minMs: 400 },
+    target: { node: 'mic', gesture: 'tap', minMs: 0 },
   },
   {
     id: 'pq-3',
@@ -43,7 +43,7 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       ],
       note: '這一題沒有提示，想不起來就按「卡住了」。',
     },
-    target: { node: 'mic', gesture: 'longPress', minMs: 400 },
+    target: { node: 'mic', gesture: 'tap', minMs: 0 },
   },
   {
     id: 'pq-4',
@@ -82,7 +82,7 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       ],
       note: '這一題沒有提示，想不起來就按「卡住了」。',
     },
-    target: { node: 'mic', gesture: 'longPress', minMs: 400 },
+    target: { node: 'mic', gesture: 'tap', minMs: 0 },
   },
   {
     id: 'pq-7',
@@ -108,6 +108,6 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       ],
       note: '這一題沒有提示，想不起來就按「卡住了」。',
     },
-    target: { node: 'mic', gesture: 'longPress', minMs: 400 },
+    target: { node: 'mic', gesture: 'tap', minMs: 0 },
   },
 ];
