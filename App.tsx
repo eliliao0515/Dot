@@ -135,11 +135,7 @@ function Root() {
       ) : null}
 
       {route.name === 'done' && lesson ? (
-        <DoneScreen
-          lesson={lesson}
-          onShare={() => setRoute({ name: 'chats' })}
-          onBack={() => setRoute({ name: 'chats' })}
-        />
+        <DoneScreen lesson={lesson} onContinue={() => setRoute({ name: 'chats' })} />
       ) : null}
     </SafeAreaView>
   );

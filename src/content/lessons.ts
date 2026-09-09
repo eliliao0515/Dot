@@ -114,9 +114,9 @@ export const savePhotoLesson: Lesson = {
   id: 'save-photo',
   eyebrow: '第 5 課 · 把照片存起來',
   title: '阿美傳了張照片給你',
-  why: '喜歡的照片可以留下來，長按那張照片，選存起來就好。',
+  why: '喜歡的照片可以留下來，點開那張照片，再點下面的下載鍵就好。',
   skillName: '把照片存起來',
-  target: { node: 'photo', gesture: 'longPress', minMs: 400 },
+  target: { node: 'photo', gesture: 'tap', minMs: 0 },
   stages: [
     {
       stage: 'guided',
@@ -124,7 +124,7 @@ export const savePhotoLesson: Lesson = {
       messages: [
         { id: 'g1', from: 'them', kind: 'photo', label: '巷口的高麗菜', showName: true },
       ],
-      coach: '長按這張照片，選「存起來」',
+      coach: '點這張照片，再點下面的下載鍵',
       note: '按錯不會怎麼樣，慢慢來。',
     },
     {
@@ -142,16 +142,16 @@ export const savePhotoLesson: Lesson = {
         { id: 't1', from: 'them', kind: 'text', text: '阿嬤你看運動會的照片！', showName: true },
         { id: 't2', from: 'them', kind: 'photo', label: '運動會' },
       ],
-      note: '換一個人。喜歡的照片一樣長按存起來。',
+      note: '換一個人。喜歡的照片一樣點開，再點下載。',
     },
   ],
   realDevice: {
     headline: '現在，換你自己的手機',
-    steps: ['關掉這個練習 App', '打開你平常在用的通訊軟體', '找一張別人傳的照片', '長按它，選存起來', '存好了就回來這裡'],
+    steps: ['關掉這個練習 App', '打開你平常在用的通訊軟體', '找一張別人傳的照片', '點開那張照片，再點下面的下載鍵', '存好了就回來這裡'],
   },
   done: {
     headline: '你會存照片了',
-    body: '以後想留住重要的照片，長按那張照片，選存起來就好。',
+    body: '以後想留住重要的照片，點開那張照片，再點下載鍵就好。',
     shareWith: '阿美',
   },
 };

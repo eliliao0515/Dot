@@ -24,6 +24,7 @@ import {
   SavedPhotoToast,
   QuickReplyRow,
 } from './parts';
+import PhotoViewer from './PhotoViewer';
 
 /**
  * 引導層疊在模擬畫面之上，底下的介面一個像素都不改。
@@ -32,7 +33,7 @@ import {
  * 傳聯絡人這個互動不呼叫 onDone —
  * 會過關的動作是五條並行路徑，同一時刻只有 lesson.target.node 指定的
  * 那一條算數：長按麥克風送出語音（'mic'）、點頂部視訊圖示（'video'）、
- * 點貼圖送出（'sticker'）、長按收到的照片存起來（'photo'）、
+ * 點貼圖送出（'sticker'）、在 PhotoViewer 裡點下載存照片（'photo'）、
  * 點任一個預設回覆膠囊（'reply'）。
  */
 
@@ -124,6 +125,7 @@ export default function ChatSim({
   const [playElapsed, setPlayElapsed] = useState(0);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [savedPhotoToast, setSavedPhotoToast] = useState(false);
+  const [viewingPhotoLabel, setViewingPhotoLabel] = useState<string | null>(null);
 
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const playTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -145,6 +147,7 @@ export default function ChatSim({
     setPlayElapsed(0);
     setReadIds(new Set());
     setSavedPhotoToast(false);
+    setViewingPhotoLabel(null);
     if (playTimer.current) clearInterval(playTimer.current);
     playTimer.current = null;
     readTimers.current.forEach(clearTimeout);
@@ -278,6 +281,28 @@ export default function ChatSim({
     }
   }
 
+  function openPhoto(label: string) {
+    setNudge(null);
+    setViewingPhotoLabel(label);
+  }
+  function closePhotoViewer() {
+    setNudge(null);
+    setViewingPhotoLabel(null);
+  }
+  // PhotoViewer 蓋在最上層（zIndex:50），下載後要先關掉它，
+  // 「已儲存」提示跟過關的成功文案才看得到。
+  function handleDownloadPhoto() {
+    setViewingPhotoLabel(null);
+    savePhoto();
+  }
+  /**
+   * PhotoViewer 裡畫筆/垃圾桶/分享這幾顆裝飾性按鈕 —
+   * 一律用中性提示，不是「答錯」。沿用既有 nudge 呈現方式。
+   */
+  function showPhotoViewerHint() {
+    setNudge('這個功能還沒做好。');
+  }
+
   function pressPlus() {
     if (recording) return;
     setPanel((p) => (p === 'attachMenu' ? 'none' : 'attachMenu'));
@@ -315,7 +340,7 @@ export default function ChatSim({
               playingId={playingId}
               playElapsed={playElapsed}
               onTogglePlay={togglePlay}
-              onSavePhoto={savePhoto}
+              onOpenPhoto={openPhoto}
             />
           ))}
           {sent.map((m) => (
@@ -327,7 +352,7 @@ export default function ChatSim({
               playingId={playingId}
               playElapsed={playElapsed}
               onTogglePlay={togglePlay}
-              onSavePhoto={savePhoto}
+              onOpenPhoto={openPhoto}
             />
           ))}
           {lastSent && readIds.has(lastSent.id) ? <ReadReceipt base={base} /> : null}
@@ -444,6 +469,19 @@ export default function ChatSim({
 
       {savedPhotoToast ? <SavedPhotoToast base={base} /> : null}
 
+      {viewingPhotoLabel ? (
+        <PhotoViewer
+          photoLabel={viewingPhotoLabel}
+          contactName={script.contact}
+          timestamp="上午 9:32"
+          onClose={closePhotoViewer}
+          onDownload={handleDownloadPhoto}
+          onTrash={showPhotoViewerHint}
+          onShare={showPhotoViewerHint}
+          onDraw={showPhotoViewerHint}
+        />
+      ) : null}
+
       {nudge && !recording && !succeeded && panel === 'none' ? (
         <View style={st.nudge} pointerEvents="none">
           <T style={[st.nudgeText, { fontSize: fz(base, 0.92), lineHeight: fz(base, 1.5) }]}>
@@ -520,6 +558,8 @@ const st = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 11,
+    // PhotoViewer 全螢幕蓋在 zIndex:50 — 裝飾按鈕的中性提示要蓋得過它才看得到。
+    zIndex: 60,
   },
   nudgeText: { color: '#fff', fontWeight: '700', textAlign: 'center' },
 

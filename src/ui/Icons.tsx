@@ -801,3 +801,268 @@ export function WalletTab({ size = 24, color = '#5B6369', weight = 2 }) {
     </View>
   );
 }
+
+/** 全螢幕看照片頂部列的關閉鍵，兩條交叉線。 */
+export function CloseX({ size = 24, color = '#fff', weight = 2.4 }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          position: 'absolute',
+          width: size * 0.7,
+          height: weight,
+          backgroundColor: color,
+          borderRadius: weight / 2,
+          transform: [{ rotate: '45deg' }],
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          width: size * 0.7,
+          height: weight,
+          backgroundColor: color,
+          borderRadius: weight / 2,
+          transform: [{ rotate: '-45deg' }],
+        }}
+      />
+    </View>
+  );
+}
+
+/** 掃描/取文字，四角取景框造型。 */
+export function ScanFrame({ size = 22, color = '#fff', weight = 2.2 }) {
+  const corner = size * 0.32;
+  return (
+    <View style={{ width: size, height: size }}>
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: corner,
+          height: corner,
+          borderLeftWidth: weight,
+          borderTopWidth: weight,
+          borderColor: color,
+          borderTopLeftRadius: 3,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: corner,
+          height: corner,
+          borderRightWidth: weight,
+          borderTopWidth: weight,
+          borderColor: color,
+          borderTopRightRadius: 3,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: corner,
+          height: corner,
+          borderLeftWidth: weight,
+          borderBottomWidth: weight,
+          borderColor: color,
+          borderBottomLeftRadius: 3,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          right: 0,
+          width: corner,
+          height: corner,
+          borderRightWidth: weight,
+          borderBottomWidth: weight,
+          borderColor: color,
+          borderBottomRightRadius: 3,
+        }}
+      />
+    </View>
+  );
+}
+
+/** 縮圖網格，3x3 小方塊。 */
+export function GridThumb({ size = 22, color = '#fff' }) {
+  const cell = size * 0.26;
+  const gap = size * 0.08;
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignContent: 'center',
+        justifyContent: 'center',
+        gap,
+      }}
+    >
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        <View key={i} style={{ width: cell, height: cell, backgroundColor: color, borderRadius: 1.5 }} />
+      ))}
+    </View>
+  );
+}
+
+/** 畫筆，單色簡筆畫（刻意不做成真實 App 那種彩色漸層圓圈）。 */
+export function Pen({ size = 24, color = '#fff' }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          width: size * 0.16,
+          height: size * 0.72,
+          backgroundColor: color,
+          borderRadius: 3,
+          transform: [{ rotate: '45deg' }],
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          width: 0,
+          height: 0,
+          borderLeftWidth: size * 0.1,
+          borderRightWidth: size * 0.1,
+          borderTopWidth: size * 0.16,
+          borderLeftColor: 'transparent',
+          borderRightColor: 'transparent',
+          borderTopColor: color,
+          transform: [{ rotate: '45deg' }, { translateX: size * 0.24 }, { translateY: -size * 0.24 }],
+        }}
+      />
+    </View>
+  );
+}
+
+/** 垃圾桶，桶身＋蓋子。 */
+export function Trash({ size = 24, color = '#fff', weight = 2 }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          width: size * 0.5,
+          height: size * 0.56,
+          borderWidth: weight,
+          borderColor: color,
+          borderTopWidth: 0,
+          borderBottomLeftRadius: 3,
+          borderBottomRightRadius: 3,
+          marginTop: size * 0.14,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: size * 0.14,
+          width: size * 0.68,
+          height: weight,
+          backgroundColor: color,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: size * 0.04,
+          width: size * 0.26,
+          height: weight,
+          backgroundColor: color,
+        }}
+      />
+    </View>
+  );
+}
+
+/** 分享，方塊＋往上的箭頭。 */
+export function ShareUp({ size = 24, color = '#fff', weight = 2 }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          width: size * 0.62,
+          height: size * 0.42,
+          borderWidth: weight,
+          borderColor: color,
+          borderRadius: 4,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: size * 0.02,
+          width: weight,
+          height: size * 0.42,
+          backgroundColor: color,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: size * 0.02,
+          width: 0,
+          height: 0,
+          borderLeftWidth: size * 0.14,
+          borderRightWidth: size * 0.14,
+          borderBottomWidth: size * 0.16,
+          borderLeftColor: 'transparent',
+          borderRightColor: 'transparent',
+          borderBottomColor: color,
+        }}
+      />
+    </View>
+  );
+}
+
+/** 下載，托盤＋往下的箭頭。 */
+export function DownloadTray({ size = 24, color = '#fff', weight = 2 }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          width: size * 0.62,
+          height: size * 0.16,
+          borderWidth: weight,
+          borderColor: color,
+          borderRadius: 3,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: size * 0.06,
+          width: weight,
+          height: size * 0.42,
+          backgroundColor: color,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: size * 0.24,
+          width: 0,
+          height: 0,
+          borderLeftWidth: size * 0.14,
+          borderRightWidth: size * 0.14,
+          borderTopWidth: size * 0.16,
+          borderLeftColor: 'transparent',
+          borderRightColor: 'transparent',
+          borderTopColor: color,
+        }}
+      />
+    </View>
+  );
+}

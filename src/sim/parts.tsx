@@ -81,17 +81,15 @@ function Waveform({ heights, color }: { heights: number[]; color: string }) {
 
 const WAVE = [5, 11, 15, 8, 13, 6, 10, 14, 7, 4];
 
-function PhotoThumb({ label, size, base, onPress, onLongPress }: {
+function PhotoThumb({ label, size, base, onPress }: {
   label: string;
   size: 'bubble' | 'grid';
   base: number;
   onPress?: () => void;
-  onLongPress?: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      onLongPress={onLongPress}
       style={[
         size === 'bubble' ? s.photo : s.photoGridThumb,
         { backgroundColor: colorFromString(label, TINT_PALETTE) },
@@ -111,7 +109,7 @@ export function MessageRow({
   playingId,
   playElapsed,
   onTogglePlay,
-  onSavePhoto,
+  onOpenPhoto,
 }: {
   msg: Bubble;
   contact: string;
@@ -119,7 +117,7 @@ export function MessageRow({
   playingId?: string | null;
   playElapsed?: number;
   onTogglePlay?: (id: string, seconds: number) => void;
-  onSavePhoto?: (id: string) => void;
+  onOpenPhoto?: (label: string) => void;
 }) {
   const mine = msg.from === 'me';
   const playing = playingId === msg.id;
@@ -146,7 +144,7 @@ export function MessageRow({
           label={msg.label}
           size="bubble"
           base={base}
-          onLongPress={!mine ? () => onSavePhoto?.(msg.id) : undefined}
+          onPress={() => onOpenPhoto?.(msg.label)}
         />
       ) : msg.kind === 'contact' ? (
         <View style={[s.bubble, s.contactBubble, mine && s.bubbleMine]}>
