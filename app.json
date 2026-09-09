@@ -21,7 +21,11 @@
       "package": "com.example.eldertutor"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "experiments": {
+      "baseUrl": "/elder-tutor"
     }
   }
 }
