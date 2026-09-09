@@ -156,14 +156,60 @@ export const savePhotoLesson: Lesson = {
   },
 };
 
+export const readReplyLesson: Lesson = {
+  id: 'read-reply',
+  eyebrow: '第 1 課 · 看訊息、回訊息',
+  title: '美惠約你禮拜三去買菜',
+  why: '不知道要打什麼字沒關係，看訊息下面幾個現成的話，點一個就能回她。',
+  skillName: '看訊息、回訊息',
+  target: { node: 'reply', gesture: 'tap', minMs: 0 },
+  stages: [
+    {
+      stage: 'guided',
+      contact: '美惠',
+      messages: [
+        { id: 'g1', from: 'them', kind: 'text', text: '禮拜三要不要一起去買菜？早上九點市場門口見', showName: true },
+      ],
+      coach: '看下面幾個現成的話，點一個回她就好',
+      note: '按錯不會怎麼樣，慢慢來。',
+    },
+    {
+      stage: 'solo',
+      contact: '美惠',
+      messages: [
+        { id: 's1', from: 'them', kind: 'text', text: '我們禮拜三見喔，不見不散', showName: true },
+      ],
+      note: '這一次沒有提示。想不起來就按「卡住了」。',
+    },
+    {
+      stage: 'transfer',
+      contact: '阿珍',
+      messages: [
+        { id: 't1', from: 'them', kind: 'text', text: '新的一年，要不要來我家吃飯？', showName: true },
+      ],
+      note: '換一個人。看訊息，點一個現成的話回她。',
+    },
+  ],
+  realDevice: {
+    headline: '現在，換你自己的手機',
+    steps: ['關掉這個練習 App', '打開你平常在用的通訊軟體', '找一則別人傳的訊息', '點下面現成的話回他', '傳出去了就回來這裡'],
+  },
+  done: {
+    headline: '你會看訊息回訊息了',
+    body: '以後收到訊息，看下面現成的話，點一個回就好，不用打字。',
+    shareWith: '美惠',
+  },
+};
+
 export const LESSONS: Record<string, Lesson> = {
   [voiceMessageLesson.id]: voiceMessageLesson,
   [stickerLesson.id]: stickerLesson,
   [savePhotoLesson.id]: savePhotoLesson,
+  [readReplyLesson.id]: readReplyLesson,
 };
 
 export const MAP_NODES: MapNode[] = [
-  { id: 'read-reply', label: '看訊息、回訊息', sub: '已經會了', state: 'done' },
+  { id: 'read-reply', label: '看訊息、回訊息', sub: '已經會了', state: 'done', lessonId: 'read-reply' },
   { id: 'sticker', label: '傳貼圖', sub: '已經會了', state: 'done', lessonId: 'sticker' },
   { id: 'voice-msg', label: '傳語音訊息', sub: '第 1 次練習，共 3 次', state: 'now', lessonId: 'voice-msg' },
   { id: 'video-call', label: '跟孫子視訊', sub: '還沒開始', state: 'todo' },

@@ -217,6 +217,37 @@ export function Sticker({ size = 26, color = '#fff', weight = 2.6 }) {
   );
 }
 
+export function Smile({ size = 26, color = '#fff', weight = 2.4 }) {
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: weight,
+        borderColor: color,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <View style={{ flexDirection: 'row', gap: size * 0.22, marginBottom: size * 0.08 }}>
+        <View style={{ width: size * 0.09, height: size * 0.09, borderRadius: size * 0.05, backgroundColor: color }} />
+        <View style={{ width: size * 0.09, height: size * 0.09, borderRadius: size * 0.05, backgroundColor: color }} />
+      </View>
+      <View
+        style={{
+          width: size * 0.36,
+          height: size * 0.18,
+          borderBottomLeftRadius: size * 0.18,
+          borderBottomRightRadius: size * 0.18,
+          borderBottomWidth: weight * 0.85,
+          borderColor: color,
+        }}
+      />
+    </View>
+  );
+}
+
 export function ThumbsUp({ size = 26, color = '#fff' }) {
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>

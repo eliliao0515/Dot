@@ -3,7 +3,7 @@ import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { T } from '../ui/Scale';
 import { C, fz } from '../ui/theme';
 import {
-  Back, Mic, Play, Pause, VideoCam, Menu, Sticker,
+  Back, Mic, Play, Pause, VideoCam, Menu, Smile,
   ThumbsUp, Heart, Laugh, Ok, Flower, Camera, Person,
 } from '../ui/Icons';
 import { Bubble, StickerId } from '../engine/types';
@@ -368,7 +368,7 @@ export function SimInputBar({
       </Pressable>
 
       <Pressable onPress={onPressSticker} hitSlop={10} style={[s.roundIcon, stickerOpen && s.roundIconOn]}>
-        <Sticker size={fz(base, 1.15)} color="#6B747A" weight={2.2} />
+        <Smile size={fz(base, 1.15)} color="#6B747A" weight={2.2} />
       </Pressable>
 
       <Pressable

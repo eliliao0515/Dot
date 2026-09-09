@@ -29,15 +29,16 @@ import {
  * 引導層疊在模擬畫面之上，底下的介面一個像素都不改。
  * guided 提示全開，solo 要自己按「卡住了」，transfer 完全沒有提示。
  *
- * 傳聯絡人/預設回覆這些互動不呼叫 onDone —
- * 會過關的動作是四條並行路徑，同一時刻只有 lesson.target.node 指定的
+ * 傳聯絡人這個互動不呼叫 onDone —
+ * 會過關的動作是五條並行路徑，同一時刻只有 lesson.target.node 指定的
  * 那一條算數：長按麥克風送出語音（'mic'）、點頂部視訊圖示（'video'）、
- * 點貼圖送出（'sticker'）、長按收到的照片存起來（'photo'）。
+ * 點貼圖送出（'sticker'）、長按收到的照片存起來（'photo'）、
+ * 點任一個預設回覆膠囊（'reply'）。
  */
 
 type Panel = 'none' | 'attachMenu' | 'photoPicker' | 'contactPicker' | 'stickerPanel';
 
-function GuideRing({ base }: { base: number }) {
+function GuideRing({ base, node }: { base: number; node: 'mic' | 'sticker' }) {
   const pulse = useRef(new Animated.Value(0)).current;
   const [reduce, setReduce] = useState(false);
 
@@ -66,14 +67,20 @@ function GuideRing({ base }: { base: number }) {
   }, [pulse, reduce]);
 
   const micSize = fz(base, 2.4);
-  const ringSize = micSize + 16;
+  // 貼圖按鈕（roundIcon）是固定 34x34，不吃 fz 縮放。
+  const stickerBtnSize = 34;
+  const targetSize = node === 'sticker' ? stickerBtnSize : micSize;
+  const ringSize = targetSize + 16;
+  // 輸入列 paddingHorizontal:12，貼圖按鈕在麥克風左邊，中間隔一個 gap:11 —
+  // 貼圖按鈕右緣到畫面右緣 = 12(padding) + micSize + 11(gap)，再扣掉 (ringSize-btnSize)/2 讓紅圈置中。
+  const rightOffset = node === 'sticker' ? 12 + micSize + 11 - (ringSize - stickerBtnSize) / 2 : 4;
 
   return (
     <View
       pointerEvents="none"
       style={[
         st.ring,
-        { width: ringSize, height: ringSize, borderRadius: ringSize / 2, right: 4, bottom: 1 },
+        { width: ringSize, height: ringSize, borderRadius: ringSize / 2, right: rightOffset, bottom: 1 },
       ]}
     >
       {!reduce && (
@@ -219,6 +226,10 @@ export default function ChatSim({
 
   function sendText(text: string) {
     appendSent({ id: `txt-${Date.now()}`, from: 'me', kind: 'text', text });
+    if (lesson.target.node === 'reply') {
+      setSucceeded(true);
+      setTimeout(onDone, 1200);
+    }
   }
   function sendPhoto(label: string) {
     appendSent({ id: `photo-${Date.now()}`, from: 'me', kind: 'photo', label });
@@ -379,7 +390,9 @@ export default function ChatSim({
         </View>
       ) : null}
 
-      {!showCoach && !recording && !succeeded && panel === 'none' ? (
+      {/* reply 課的建議訊息就是過關目標本體，跟麥克風/貼圖鍵一樣不受 showCoach 影響 —
+          guided 階段的教練文字說「看下面幾個現成的話」，這排膠囊得跟著一起顯示才點得到。 */}
+      {lesson.target.node === 'reply' && !recording && !succeeded && panel === 'none' ? (
         <QuickReplyRow base={base} onPick={sendText} />
       ) : null}
 
@@ -397,7 +410,13 @@ export default function ChatSim({
         onTooShort={handleTooShort}
       />
 
-      {showCoach && !recording && !succeeded && panel === 'none' ? <GuideRing base={base} /> : null}
+      {showCoach &&
+      !recording &&
+      !succeeded &&
+      panel === 'none' &&
+      (lesson.target.node === 'mic' || lesson.target.node === 'sticker') ? (
+        <GuideRing base={base} node={lesson.target.node} />
+      ) : null}
 
       {/* 錄音中的回饋。用文字和秒數，不用會嚇到人的紅點。 */}
       {recording ? (
