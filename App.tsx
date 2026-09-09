@@ -6,12 +6,11 @@ import { C, fz } from './src/ui/theme';
 import { LESSONS, MAP_NODES, CHAT_ROOMS } from './src/content/lessons';
 import ChatSim from './src/sim/ChatSim';
 import ChatsListScreen, { ChatRoomItem } from './src/sim/ChatsListScreen';
-import { BriefScreen, RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
+import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
 
 type Route =
   | { name: 'chats' }
-  | { name: 'brief'; lessonId: string }
   | { name: 'sim'; lessonId: string; stageIndex: number }
   | { name: 'realDevice'; lessonId: string }
   | { name: 'done'; lessonId: string }
@@ -101,21 +100,13 @@ function Root() {
           }}
           onOpenRoom={(id) => {
             const node = MAP_NODES.find((n) => n.id === id);
-            if (node?.lessonId) setRoute({ name: 'brief', lessonId: node.lessonId });
+            if (node?.lessonId) setRoute({ name: 'sim', lessonId: node.lessonId, stageIndex: 0 });
           }}
         />
       ) : null}
 
       {route.name === 'practice' ? (
         <PracticeSession onExit={() => setRoute({ name: 'chats' })} />
-      ) : null}
-
-      {route.name === 'brief' && lesson ? (
-        <BriefScreen
-          lesson={lesson}
-          onBack={() => setRoute({ name: 'chats' })}
-          onStart={() => setRoute({ name: 'sim', lessonId: lesson.id, stageIndex: 0 })}
-        />
       ) : null}
 
       {route.name === 'sim' && lesson ? (
