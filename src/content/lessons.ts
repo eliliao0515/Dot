@@ -65,16 +65,109 @@ export const voiceMessageLesson: Lesson = {
   },
 };
 
+export const stickerLesson: Lesson = {
+  id: 'sticker',
+  eyebrow: '第 2 課 · 傳貼圖',
+  title: '阿弟母親節傳訊息給你',
+  why: '不知道要打什麼字沒關係，點一個貼圖就能表達心意，不用打字。',
+  skillName: '傳貼圖',
+  target: { node: 'sticker', gesture: 'tap', minMs: 0 },
+  stages: [
+    {
+      stage: 'guided',
+      contact: '阿弟',
+      messages: [
+        { id: 'g1', from: 'them', kind: 'text', text: '媽母親節快樂，今天有出去走走嗎？', showName: true },
+      ],
+      coach: '點下面那個貼圖的圖示，選一個你喜歡的貼圖回他',
+      note: '按錯不會怎麼樣，慢慢來。',
+    },
+    {
+      stage: 'solo',
+      contact: '阿弟',
+      messages: [
+        { id: 's1', from: 'them', kind: 'text', text: '我禮拜五生日，晚上要不要一起吃飯？', showName: true },
+      ],
+      note: '這一次沒有提示。想不起來就按「卡住了」。',
+    },
+    {
+      stage: 'transfer',
+      contact: '美玲',
+      messages: [
+        { id: 't1', from: 'them', kind: 'text', text: '新年快樂！你們家圍爐了嗎？', showName: true },
+      ],
+      note: '換一個人。想回他，點貼圖選一個就好。',
+    },
+  ],
+  realDevice: {
+    headline: '現在，換你自己的手機',
+    steps: ['關掉這個練習 App', '打開你平常在用的通訊軟體', '找一個人，傳一個貼圖給他', '傳出去了就回來這裡'],
+  },
+  done: {
+    headline: '你會傳貼圖了',
+    body: '以後不知道要打什麼字，點貼圖的圖示選一個貼圖就好，不用打字。',
+    shareWith: '阿弟',
+  },
+};
+
+export const savePhotoLesson: Lesson = {
+  id: 'save-photo',
+  eyebrow: '第 5 課 · 把照片存起來',
+  title: '阿美傳了張照片給你',
+  why: '喜歡的照片可以留下來，長按那張照片，選存起來就好。',
+  skillName: '把照片存起來',
+  target: { node: 'photo', gesture: 'longPress', minMs: 400 },
+  stages: [
+    {
+      stage: 'guided',
+      contact: '阿美',
+      messages: [
+        { id: 'g1', from: 'them', kind: 'photo', label: '巷口的高麗菜', showName: true },
+      ],
+      coach: '長按這張照片，選「存起來」',
+      note: '按錯不會怎麼樣，慢慢來。',
+    },
+    {
+      stage: 'solo',
+      contact: '阿美',
+      messages: [
+        { id: 's1', from: 'them', kind: 'photo', label: '菜市場的芭樂' },
+      ],
+      note: '這一次沒有提示。想不起來就按「卡住了」。',
+    },
+    {
+      stage: 'transfer',
+      contact: '小宇',
+      messages: [
+        { id: 't1', from: 'them', kind: 'text', text: '阿嬤你看運動會的照片！', showName: true },
+        { id: 't2', from: 'them', kind: 'photo', label: '運動會' },
+      ],
+      note: '換一個人。喜歡的照片一樣長按存起來。',
+    },
+  ],
+  realDevice: {
+    headline: '現在，換你自己的手機',
+    steps: ['關掉這個練習 App', '打開你平常在用的通訊軟體', '找一張別人傳的照片', '長按它，選存起來', '存好了就回來這裡'],
+  },
+  done: {
+    headline: '你會存照片了',
+    body: '以後想留住重要的照片，長按那張照片，選存起來就好。',
+    shareWith: '阿美',
+  },
+};
+
 export const LESSONS: Record<string, Lesson> = {
   [voiceMessageLesson.id]: voiceMessageLesson,
+  [stickerLesson.id]: stickerLesson,
+  [savePhotoLesson.id]: savePhotoLesson,
 };
 
 export const MAP_NODES: MapNode[] = [
   { id: 'read-reply', label: '看訊息、回訊息', sub: '已經會了', state: 'done' },
-  { id: 'sticker', label: '傳貼圖', sub: '已經會了', state: 'done' },
+  { id: 'sticker', label: '傳貼圖', sub: '已經會了', state: 'done', lessonId: 'sticker' },
   { id: 'voice-msg', label: '傳語音訊息', sub: '第 1 次練習，共 3 次', state: 'now', lessonId: 'voice-msg' },
   { id: 'video-call', label: '跟孫子視訊', sub: '還沒開始', state: 'todo' },
-  { id: 'save-photo', label: '把照片存起來', sub: '還沒開始', state: 'todo' },
+  { id: 'save-photo', label: '把照片存起來', sub: '還沒開始', state: 'todo', lessonId: 'save-photo' },
   { id: 'anti-fraud', label: '認出假訊息', sub: '還沒開始', state: 'todo' },
 ];
 

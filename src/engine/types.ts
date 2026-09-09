@@ -25,7 +25,7 @@ export type Bubble =
 
 /** 使用者要完成的操作。目前只實作長按麥克風，之後可擴充 tap / swipe。 */
 export type Target = {
-  node: 'mic' | 'plus' | 'video';
+  node: 'mic' | 'plus' | 'video' | 'sticker' | 'photo';
   gesture: 'longPress' | 'tap';
   /** 長按門檻。手抖的人需要放寬，這個值要在真機上調。 */
   minMs: number;

@@ -29,10 +29,10 @@ import {
  * 引導層疊在模擬畫面之上，底下的介面一個像素都不改。
  * guided 提示全開，solo 要自己按「卡住了」，transfer 完全沒有提示。
  *
- * 傳照片/聯絡人/貼圖/預設回覆這些新互動全部不呼叫 onDone —
- * 會過關的動作只有兩條並行路徑，同一時刻只有 lesson.target.node 指定的
- * 那一條算數：長按麥克風送出語音（node === 'mic'），
- * 或點頂部視訊圖示（node === 'video' 且 gesture === 'tap'）。
+ * 傳聯絡人/預設回覆這些互動不呼叫 onDone —
+ * 會過關的動作是四條並行路徑，同一時刻只有 lesson.target.node 指定的
+ * 那一條算數：長按麥克風送出語音（'mic'）、點頂部視訊圖示（'video'）、
+ * 點貼圖送出（'sticker'）、長按收到的照片存起來（'photo'）。
  */
 
 type Panel = 'none' | 'attachMenu' | 'photoPicker' | 'contactPicker' | 'stickerPanel';
@@ -228,6 +228,10 @@ export default function ChatSim({
   }
   function sendSticker(id: StickerId) {
     appendSent({ id: `sticker-${Date.now()}`, from: 'me', kind: 'sticker', sticker: id });
+    if (lesson.target.node === 'sticker') {
+      setSucceeded(true);
+      setTimeout(onDone, 1200);
+    }
   }
 
   function togglePlay(id: string, seconds: number) {
@@ -257,6 +261,10 @@ export default function ChatSim({
     setSavedPhotoToast(true);
     if (saveToastTimer.current) clearTimeout(saveToastTimer.current);
     saveToastTimer.current = setTimeout(() => setSavedPhotoToast(false), 1800);
+    if (lesson.target.node === 'photo') {
+      setSucceeded(true);
+      setTimeout(onDone, 1200);
+    }
   }
 
   function pressPlus() {
@@ -404,7 +412,13 @@ export default function ChatSim({
       {succeeded ? (
         <View style={st.success} pointerEvents="none">
           <T style={[st.successText, { fontSize: fz(base, 1.15), lineHeight: fz(base, 1.6) }]}>
-            {lesson.target.node === 'video' ? '接通了' : '送出去了'}
+            {lesson.target.node === 'video'
+              ? '接通了'
+              : lesson.target.node === 'sticker'
+              ? '貼圖傳出去了'
+              : lesson.target.node === 'photo'
+              ? '存起來了'
+              : '送出去了'}
           </T>
         </View>
       ) : null}
