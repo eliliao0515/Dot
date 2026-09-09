@@ -145,3 +145,23 @@ running in parallel.
 - The workflow YAML is valid (no syntax errors — a quick way to sanity-check
   without a real CI run is `python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/deploy.yml'))"`
   or equivalent)
+
+## Completion record
+- Date: 2026-09-09
+- Executor: worker (config/CI plumbing only, no app code touched)
+- PM verification: `npx tsc --noEmit` passed; a genuine clean `git clone` +
+  `npm ci` + `npm run typecheck` + `npm run export` all succeeded against the
+  committed state; all four screenshots confirmed `git check-ignore`d, not
+  deleted; export log confirmed `Using (experimental) base path: /elder-tutor`
+- Deployed: repo created public at `github.com/eliliao0515/elder-tutor`,
+  pushed, GitHub Pages enabled with `build_type=workflow` via `gh api`, first
+  Actions run (triggered by the push itself) went green end to end (build 37s,
+  deploy 11s). Live site verified both via `curl` (200, correct HTML, correct
+  subpath) and by opening it in a real browser tab — the chat list, all four
+  lessons, and the practice session all render and are interactive at
+  **https://eliliao0515.github.io/elder-tutor/**
+- Status: **done, deployed, live**
+- Outstanding: real low-end Android device check (CLAUDE.md requires this,
+  only the user can do it); repo-visibility judgment call (b) was resolved by
+  the user directly (public, accepted the UI-exposure risk as revisable) —
+  see chat log for the memo this overrode
