@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "長輩手機練習",
-    "slug": "elder-tutor",
+    "name": "Dot",
+    "slug": "Dot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.example.eldertutor"
+      "bundleIdentifier": "com.example.dot"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,14 +18,14 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.example.eldertutor"
+      "package": "com.example.dot"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "output": "single"
     },
     "experiments": {
-      "baseUrl": "/elder-tutor"
+      "baseUrl": "/Dot"
     }
   }
 }
