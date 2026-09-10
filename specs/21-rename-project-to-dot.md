@@ -87,3 +87,22 @@ drive-by.
 - `grep -rn "elder-tutor\|eldertutor\|長輩手機練習" package.json app.json README.md`
   returns nothing
 - `git diff --stat` shows only the three intended files changed
+
+## Completion record
+- Date: 2026-09-10
+- Executor: worker (file edits only, no repo/GitHub actions)
+- PM actions (outside this task's scope, done directly since it touches a
+  live public URL): `gh repo rename Dot --repo eliliao0515/elder-tutor`,
+  local `git remote set-url origin` updated to match, confirmed reachable
+  with `git fetch`
+- PM verification: `npx tsc --noEmit` passed; `git diff --stat` confirmed
+  only the three intended files changed; grep confirmed zero residue of
+  `elder-tutor`/`eldertutor`/`長輩手機練習`; pushed to the renamed remote,
+  watched the triggered Actions run go green end to end (build 34s, deploy
+  10s); confirmed the new live URL both via `curl` (200, `<title>Dot</title>`)
+  and a real browser tab (chat list renders and is interactive)
+- Status: **done, deployed, live** at **https://eliliao0515.github.io/Dot/**
+- Outstanding: the old URL (`.../elder-tutor/`) may still be reachable via
+  GitHub's repo-rename redirect for a while, but is not guaranteed to serve
+  the Pages site correctly going forward — nothing else depended on it yet
+  per the earlier deployment memo, so this wasn't treated as a blocker
