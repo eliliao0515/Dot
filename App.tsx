@@ -9,6 +9,15 @@ import ChatsListScreen, { ChatRoomItem } from './src/sim/ChatsListScreen';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
 import { initLineAuth, type LineUser } from './src/auth/lineAuth';
+import {
+  loadProgress,
+  recordStageDone,
+  recordRealDevice,
+  resumeStageIndex,
+  nodeStateFor,
+  EMPTY_PROGRESS,
+  type Progress,
+} from './src/storage/progress';
 
 type Route =
   | { name: 'chats' }
@@ -21,19 +30,24 @@ type Route =
  * 聊天列表的假聯絡人內容（CHAT_ROOMS）跟操作狀態（MAP_NODES）分開存放，
  * 在這裡合併成 ChatsListScreen 純吃的 props，sim 層不用認得 lesson 概念。
  */
-const CHAT_ROOM_ITEMS: ChatRoomItem[] = MAP_NODES.map((node) => {
-  const room = CHAT_ROOMS.find((r) => r.id === node.id)!;
-  return {
-    id: node.id,
-    title: room.contactName,
-    preview: room.preview,
-    time: room.time,
-    avatarGlyph: room.avatarGlyph,
-    avatarColor: room.avatarColor,
-    emphasized: node.state === 'now',
-    actionable: !!node.lessonId,
-  };
-});
+function buildRoomItems(progress: Progress): ChatRoomItem[] {
+  return MAP_NODES.map((node) => {
+    const room = CHAT_ROOMS.find((r) => r.id === node.id)!;
+    const total = node.lessonId ? LESSONS[node.lessonId]?.stages.length ?? 0 : 0;
+    const state = nodeStateFor(progress, node, total);
+    return {
+      id: node.id,
+      title: room.contactName,
+      preview: room.preview,
+      time: room.time,
+      avatarGlyph: room.avatarGlyph,
+      avatarColor: room.avatarColor,
+      emphasized: state === 'now',
+      // 永遠可點。不鎖關卡是已定案的原則 — 擋住他只會讓他關掉 App 去問女兒。
+      actionable: !!node.lessonId,
+    };
+  });
+}
 
 const STAGE_LABEL: Record<string, string> = {
   guided: '帶著做',
@@ -94,15 +108,29 @@ function Root() {
   const { base } = useScale();
   const [route, setRoute] = useState<Route>({ name: 'chats' });
   const [lineUser, setLineUser] = useState<LineUser | null>(null);
+  const [progress, setProgress] = useState<Progress>(EMPTY_PROGRESS);
 
   // 身分是加分項：拿不到就匿名繼續，畫面不等它。
+  // 順序有意義 — 進度的 key 依身分而定，所以要等身分解析完才讀進度。
   useEffect(() => {
-    initLineAuth().then(setLineUser);
+    let alive = true;
+    initLineAuth()
+      .then((user) => {
+        if (alive) setLineUser(user);
+        return loadProgress();
+      })
+      .then((p) => {
+        if (alive) setProgress(p);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
   const lesson = 'lessonId' in route ? LESSONS[route.lessonId] : undefined;
 
   function advance() {
     if (route.name !== 'sim' || !lesson) return;
+    recordStageDone(progress, lesson.id, route.stageIndex).then(setProgress);
     const next = route.stageIndex + 1;
     if (next < lesson.stages.length) {
       setRoute({ name: 'sim', lessonId: lesson.id, stageIndex: next });
@@ -118,7 +146,7 @@ function Root() {
 
       {route.name === 'chats' ? (
         <ChatsListScreen
-          rooms={CHAT_ROOM_ITEMS}
+          rooms={buildRoomItems(progress)}
           base={base}
           pinned={{
             title: '綜合練習',
@@ -127,7 +155,14 @@ function Root() {
           }}
           onOpenRoom={(id) => {
             const node = MAP_NODES.find((n) => n.id === id);
-            if (node?.lessonId) setRoute({ name: 'sim', lessonId: node.lessonId, stageIndex: 0 });
+            if (!node?.lessonId) return;
+            const target = LESSONS[node.lessonId];
+            setRoute({
+              name: 'sim',
+              lessonId: node.lessonId,
+              // 接著上次做到的地方，不是每次都從頭。
+              stageIndex: resumeStageIndex(progress, node.lessonId, target.stages.length),
+            });
           }}
         />
       ) : null}
@@ -156,7 +191,11 @@ function Root() {
       {route.name === 'realDevice' && lesson ? (
         <RealDeviceScreen
           lesson={lesson}
-          onConfirm={() => setRoute({ name: 'done', lessonId: lesson.id })}
+          onConfirm={() => {
+            // 只有真的在自己手機上做到才記。跳過不算，也不會被追究。
+            recordRealDevice(progress, lesson.id).then(setProgress);
+            setRoute({ name: 'done', lessonId: lesson.id });
+          }}
           onLater={() => setRoute({ name: 'done', lessonId: lesson.id })}
         />
       ) : null}
