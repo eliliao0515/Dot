@@ -3,6 +3,7 @@ import { View, SafeAreaView, StatusBar, Platform, Pressable, StyleSheet } from '
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { ScaleProvider, T, useScale } from './src/ui/Scale';
 import { C, fz } from './src/ui/theme';
+import { Back } from './src/ui/Icons';
 import { LESSONS, MAP_NODES, CHAT_ROOMS } from './src/content/lessons';
 import ChatSim from './src/sim/ChatSim';
 import ChatsListScreen, { ChatRoomItem } from './src/sim/ChatsListScreen';
@@ -76,14 +77,12 @@ function TeachingFrame({
   const { base } = useScale();
   return (
     <View style={s.frame}>
+      <Pressable onPress={onExit} hitSlop={14} accessibilityRole="button">
+        <Back size={fz(base, 1.3)} color="#B9CEDC" />
+      </Pressable>
       <T systemScaling style={[s.frameText, { fontSize: fz(base, 0.78), lineHeight: fz(base, 1.3) }]}>
         {`練習 ${stageIndex + 1} / ${total}　${STAGE_LABEL[stage] ?? ''}`}
       </T>
-      <Pressable onPress={onExit} hitSlop={14} accessibilityRole="button">
-        <T systemScaling style={[s.frameExit, { fontSize: fz(base, 0.78), lineHeight: fz(base, 1.3) }]}>
-          先離開
-        </T>
-      </Pressable>
     </View>
   );
 }
@@ -262,7 +261,6 @@ const s = StyleSheet.create({
     gap: 12,
   },
   frameText: { color: '#B9CEDC', fontWeight: '700', flex: 1 },
-  frameExit: { color: '#fff', fontWeight: '700', textDecorationLine: 'underline' },
   debug: { backgroundColor: '#3B2E00', paddingHorizontal: 12, paddingVertical: 4 },
   debugText: { color: '#FFD666', fontSize: 12, lineHeight: 16 },
 });
