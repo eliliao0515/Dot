@@ -188,7 +188,7 @@ function Root() {
             <HomeProfileScreen
               user={lineUser}
               base={base}
-              onBack={() => setRoute({ name: 'chats' })}
+              onPressChats={() => setRoute({ name: 'chats' })}
               onLogout={() => {
                 logout();
                 setLineUser(null);

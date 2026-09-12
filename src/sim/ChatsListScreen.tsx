@@ -14,13 +14,9 @@ import {
   VideoCam,
   Camera,
   PhoneOutline,
-  HomeTab,
-  ChatsTab,
-  DiscoverTab,
-  MoonTab,
-  WalletTab,
 } from '../ui/Icons';
 import { ChatRoomAvatarGlyph } from '../engine/types';
+import { BottomTabBar } from './BottomTabBar';
 
 /**
  * 被模擬的 LINE「聊天」分頁，是這個 App 打開後看到的根頁面。
@@ -174,35 +170,6 @@ function RoomRow({
   );
 }
 
-function BottomTab({
-  icon,
-  label,
-  base,
-  selected,
-  onPress,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  base: number;
-  selected?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={s.tabItem} accessibilityRole="button" hitSlop={4}>
-      {icon}
-      <T
-        style={[
-          s.tabLabel,
-          { fontSize: fz(base, 0.62), lineHeight: fz(base, 1) },
-          selected && s.tabLabelOn,
-        ]}
-      >
-        {label}
-      </T>
-    </Pressable>
-  );
-}
-
 export default function ChatsListScreen({
   rooms,
   base,
@@ -274,39 +241,15 @@ export default function ChatsListScreen({
         </View>
       ) : null}
 
-      <View style={s.bottomBar}>
-        <BottomTab
-          icon={<HomeTab size={fz(base, 1.4)} color={C.ink3} />}
-          label="Home"
-          base={base}
-          onPress={onPressHome}
-        />
-        <BottomTab
-          icon={<ChatsTab size={fz(base, 1.4)} color={C.chatGreen} />}
-          label="Chats"
-          base={base}
-          selected
-          onPress={() => {}}
-        />
-        <BottomTab
-          icon={<DiscoverTab size={fz(base, 1.4)} color={C.ink3} />}
-          label="Discover"
-          base={base}
-          onPress={() => show('這個功能還沒做好。')}
-        />
-        <BottomTab
-          icon={<MoonTab size={fz(base, 1.4)} color={C.ink3} bg={C.paper} />}
-          label="Today"
-          base={base}
-          onPress={() => show('這個功能還沒做好。')}
-        />
-        <BottomTab
-          icon={<WalletTab size={fz(base, 1.4)} color={C.ink3} />}
-          label="Wallet"
-          base={base}
-          onPress={() => show('這個功能還沒做好。')}
-        />
-      </View>
+      <BottomTabBar
+        active="chats"
+        base={base}
+        onPressHome={onPressHome}
+        onPressChats={() => {}}
+        onPressDiscover={() => show('這個功能還沒做好。')}
+        onPressToday={() => show('這個功能還沒做好。')}
+        onPressWallet={() => show('這個功能還沒做好。')}
+      />
     </View>
   );
 }
@@ -446,16 +389,4 @@ const s = StyleSheet.create({
     paddingVertical: 11,
   },
   toastText: { color: '#fff', fontWeight: '600', textAlign: 'center' },
-
-  bottomBar: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: C.chatLine,
-    backgroundColor: C.paper,
-    paddingTop: 8,
-    paddingBottom: 10,
-  },
-  tabItem: { flex: 1, alignItems: 'center', gap: 3 },
-  tabLabel: { color: C.ink3, fontWeight: '600' },
-  tabLabelOn: { color: C.chatGreen, fontWeight: '800' },
 });
