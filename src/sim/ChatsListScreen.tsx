@@ -16,7 +16,6 @@ import {
   PhoneOutline,
 } from '../ui/Icons';
 import { ChatRoomAvatarGlyph } from '../engine/types';
-import { BottomTabBar } from './BottomTabBar';
 
 /**
  * 被模擬的 LINE「聊天」分頁，是這個 App 打開後看到的根頁面。
@@ -175,13 +174,11 @@ export default function ChatsListScreen({
   base,
   pinned,
   onOpenRoom,
-  onPressHome,
 }: {
   rooms: ChatRoomItem[];
   base: number;
   pinned?: PinnedRoomItem;
   onOpenRoom: (id: string) => void;
-  onPressHome: () => void;
 }) {
   const { msg, show } = useToast();
 
@@ -240,16 +237,6 @@ export default function ChatsListScreen({
           <T style={[s.toastText, { fontSize: fz(base, 0.85), lineHeight: fz(base, 1.4) }]}>{msg}</T>
         </View>
       ) : null}
-
-      <BottomTabBar
-        active="chats"
-        base={base}
-        onPressHome={onPressHome}
-        onPressChats={() => {}}
-        onPressDiscover={() => show('這個功能還沒做好。')}
-        onPressToday={() => show('這個功能還沒做好。')}
-        onPressWallet={() => show('這個功能還沒做好。')}
-      />
     </View>
   );
 }
@@ -382,7 +369,10 @@ const s = StyleSheet.create({
     position: 'absolute',
     left: 14,
     right: 14,
-    bottom: 78,
+    // 這顆 toast 貼的是這個畫面自己 wrap 的底部——BottomTabBar 搬去 App.tsx 後，
+    // wrap 已經不再包含分頁列的高度了，所以這裡不能再照分頁列還在時候的 78，
+    // 要扣掉分頁列高度才會貼齊分頁列正上方（跟 App.tsx 那個共用 toast 的視覺位置對齊）。
+    bottom: 18,
     backgroundColor: C.chatInk,
     borderRadius: 10,
     paddingHorizontal: 16,

@@ -1,29 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Image, Pressable, StyleSheet } from 'react-native';
-import { T, useScale } from '../ui/Scale';
+import { T } from '../ui/Scale';
 import { C, fz } from '../ui/theme';
 import { Person } from '../ui/Icons';
 import type { LineUser } from '../auth/lineAuth';
-import { BottomTabBar } from './BottomTabBar';
-
-function useToast() {
-  const [msg, setMsg] = useState<string | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, []);
-
-  function show(text: string) {
-    setMsg(text);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMsg(null), 2200);
-  }
-
-  return { msg, show };
-}
 
 /**
  * 底部「Home」分頁的個人檔案畫面。這是被模擬 App 自己的內容，走綠色系，
@@ -38,16 +18,13 @@ function useToast() {
 export default function HomeProfileScreen({
   user,
   base,
-  onPressChats,
   onLogout,
 }: {
   user: LineUser;
   base: number;
-  onPressChats: () => void;
   onLogout: () => void;
 }) {
   const [imgFailed, setImgFailed] = useState(false);
-  const { msg, show } = useToast();
   const showFallback = !user.pictureUrl || imgFailed;
   const avatarSize = 108;
 
@@ -83,22 +60,6 @@ export default function HomeProfileScreen({
           <T style={[s.logoutText, { fontSize: fz(base, 1.05), lineHeight: fz(base, 1.5) }]}>登出</T>
         </Pressable>
       </View>
-
-      {msg ? (
-        <View style={s.toast} pointerEvents="none">
-          <T style={[s.toastText, { fontSize: fz(base, 0.85), lineHeight: fz(base, 1.4) }]}>{msg}</T>
-        </View>
-      ) : null}
-
-      <BottomTabBar
-        active="home"
-        base={base}
-        onPressHome={() => {}}
-        onPressChats={onPressChats}
-        onPressDiscover={() => show('這個功能還沒做好。')}
-        onPressToday={() => show('這個功能還沒做好。')}
-        onPressWallet={() => show('這個功能還沒做好。')}
-      />
     </View>
   );
 }
@@ -128,16 +89,4 @@ const s = StyleSheet.create({
   },
   logoutBtnPressed: { opacity: 0.82 },
   logoutText: { color: C.chatGreen, fontWeight: '900', textAlign: 'center' },
-
-  toast: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 78,
-    backgroundColor: C.chatInk,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-  },
-  toastText: { color: '#fff', fontWeight: '600', textAlign: 'center' },
 });
