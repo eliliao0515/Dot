@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, SafeAreaView, StatusBar, Platform, Pressable, StyleSheet } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { ScaleProvider, T, useScale } from './src/ui/Scale';
@@ -8,6 +8,7 @@ import ChatSim from './src/sim/ChatSim';
 import ChatsListScreen, { ChatRoomItem } from './src/sim/ChatsListScreen';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
+import { initLineAuth, type LineUser } from './src/auth/lineAuth';
 
 type Route =
   | { name: 'chats' }
@@ -70,9 +71,34 @@ function TeachingFrame({
   );
 }
 
+/**
+ * 只在網址帶 ?debug=1 時出現，給開發與據點現場排查用。
+ * 長輩的正常使用路徑永遠看不到這一條。
+ */
+function DebugBadge({ user }: { user: LineUser | null }) {
+  const on =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('debug') === '1';
+  if (!on) return null;
+  return (
+    <View style={s.debug}>
+      <T systemScaling style={s.debugText}>
+        {user ? `LINE: ${user.displayName}` : 'LINE: \u533f\u540d\uff08\u672a\u53d6\u5f97\u8eab\u5206\uff09'}
+      </T>
+    </View>
+  );
+}
+
 function Root() {
   const { base } = useScale();
   const [route, setRoute] = useState<Route>({ name: 'chats' });
+  const [lineUser, setLineUser] = useState<LineUser | null>(null);
+
+  // 身分是加分項：拿不到就匿名繼續，畫面不等它。
+  useEffect(() => {
+    initLineAuth().then(setLineUser);
+  }, []);
   const lesson = 'lessonId' in route ? LESSONS[route.lessonId] : undefined;
 
   function advance() {
@@ -88,6 +114,7 @@ function Root() {
   return (
     <SafeAreaView style={s.safe}>
       <ExpoStatusBar style="dark" />
+      <DebugBadge user={lineUser} />
 
       {route.name === 'chats' ? (
         <ChatsListScreen
@@ -165,4 +192,6 @@ const s = StyleSheet.create({
   },
   frameText: { color: '#B9CEDC', fontWeight: '700', flex: 1 },
   frameExit: { color: '#fff', fontWeight: '700', textDecorationLine: 'underline' },
+  debug: { backgroundColor: '#3B2E00', paddingHorizontal: 12, paddingVertical: 4 },
+  debugText: { color: '#FFD666', fontSize: 12, lineHeight: 16 },
 });
