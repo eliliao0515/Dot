@@ -120,7 +120,13 @@ export default function ChatSim({
   onDone: () => void;
 }) {
   const { base } = useScale();
-  const [sent, setSent] = useState<Bubble[]>([]);
+  /**
+   * 整段對話是連續的一條串，guided → solo → transfer 只是同一串裡陸續冒出來的
+   * 新訊息，不是三個各自獨立的場景。transfer 換人這件事保留（見 lessons.ts 的
+   * 「換人、換情境」設計），但換人不等於換畫面 — 每則訊息記著自己當時是哪個
+   * 聯絡人傳的，這樣舊訊息的 showName 標籤不會被之後的階段追溯改掉。
+   */
+  const [thread, setThread] = useState<Array<{ bubble: Bubble; contact: string }>>([]);
   const [draftText, setDraftText] = useState('');
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [recorderPhase, setRecorderPhase] = useState<'idle' | 'recording' | 'stopped'>('idle');
@@ -142,10 +148,22 @@ export default function ChatSim({
   const readTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const saveToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scroller = useRef<ScrollView>(null);
+  // React StrictMode 在 dev 模式會把 effect 故意多跑一次 —
+  // 記住已經把哪個階段的開場訊息接進 thread 過，避免重複塞兩次。
+  const appendedStagesRef = useRef<Set<string>>(new Set());
 
-  // 換一階段就重置，不要把上一階的狀態帶過來。
+  // 換一階段：對話內容用接的，不是用洗掉的 —— guided/solo/transfer 是同一條串
+  // 陸續冒出來的新訊息。只有「這一階互動用的介面狀態」才重置，見底下這一串。
   useEffect(() => {
-    setSent([]);
+    const stageKey = `${lesson.id}:${script.stage}`;
+    if (!appendedStagesRef.current.has(stageKey)) {
+      appendedStagesRef.current.add(stageKey);
+      setThread((prev) => [
+        ...prev,
+        ...script.messages.map((bubble) => ({ bubble, contact: script.contact })),
+      ]);
+    }
+
     setDraftText('');
     setRecorderOpen(false);
     setRecorderPhase('idle');
@@ -157,13 +175,10 @@ export default function ChatSim({
     setPanel('none');
     setPlayingId(null);
     setPlayElapsed(0);
-    setReadIds(new Set());
     setSavedPhotoToast(false);
     setViewingPhotoLabel(null);
     if (playTimer.current) clearInterval(playTimer.current);
     playTimer.current = null;
-    readTimers.current.forEach(clearTimeout);
-    readTimers.current = [];
     if (saveToastTimer.current) clearTimeout(saveToastTimer.current);
     saveToastTimer.current = null;
   }, [script.stage]);
@@ -213,9 +228,9 @@ export default function ChatSim({
     const secs = Math.max(1, seconds);
     setRecorderOpen(false);
     setRecorderPhase('idle');
-    setSent((prev) => [
+    setThread((prev) => [
       ...prev,
-      { id: `voice-${Date.now()}`, from: 'me', kind: 'voice', seconds: secs },
+      { bubble: { id: `voice-${Date.now()}`, from: 'me', kind: 'voice', seconds: secs }, contact: script.contact },
     ]);
     if (lesson.target.node === 'mic') {
       setSucceeded(true);
@@ -262,7 +277,7 @@ export default function ChatSim({
   }
 
   function appendSent(bubble: Bubble) {
-    setSent((prev) => [...prev, bubble]);
+    setThread((prev) => [...prev, { bubble, contact: script.contact }]);
     setPanel('none');
     scheduleRead(bubble.id);
   }
@@ -369,7 +384,8 @@ export default function ChatSim({
   }
 
   const helpIsBig = wrongTaps >= 2 && !askedForHelp;
-  const lastSent = sent.length > 0 ? sent[sent.length - 1] : null;
+  const meBubbles = thread.filter((t) => t.bubble.from === 'me');
+  const lastSent = meBubbles.length > 0 ? meBubbles[meBubbles.length - 1].bubble : null;
 
   return (
     <View style={st.wrap}>
@@ -402,23 +418,11 @@ export default function ChatSim({
               contentContainerStyle={st.threadInner}
               onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: true })}
             >
-              {script.messages.map((m) => (
+              {thread.map(({ bubble, contact }) => (
                 <MessageRow
-                  key={m.id}
-                  msg={m}
-                  contact={script.contact}
-                  base={base}
-                  playingId={playingId}
-                  playElapsed={playElapsed}
-                  onTogglePlay={togglePlay}
-                  onOpenPhoto={openPhoto}
-                />
-              ))}
-              {sent.map((m) => (
-                <MessageRow
-                  key={m.id}
-                  msg={m}
-                  contact={script.contact}
+                  key={bubble.id}
+                  msg={bubble}
+                  contact={contact}
                   base={base}
                   playingId={playingId}
                   playElapsed={playElapsed}

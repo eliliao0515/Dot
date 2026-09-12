@@ -195,7 +195,7 @@ function Root() {
                 onExit={() => setStack(null)}
               />
               <ChatSim
-                key={`${lesson.id}-${stack.stageIndex}`}
+                key={lesson.id}
                 lesson={lesson}
                 script={lesson.stages[stack.stageIndex]}
                 onDone={advance}
