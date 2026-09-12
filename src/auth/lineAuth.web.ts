@@ -97,8 +97,14 @@ export async function getIdToken(): Promise<string | null> {
 
 /**
  * 在一般瀏覽器主動要求登入（會跳 LINE 授權頁）。
- * 長輩端不要呼叫這個 — 授權畫面對他們等同釣魚頁。
- * 保留給日後的子女端／照顧者模式使用。
+ *
+ * 2026-09-13 更新：這是現在全站強制登入的真正入口，由 `LoginGate` 的按鈕呼叫
+ * ——使用者已經知情、確認過風險後推翻了原本「不要註冊登入」的原則
+ * （見 CLAUDE.md）。原本這裡只保留給子女端／照顧者模式用，現在不是了。
+ *
+ * 但底下這個理由還是成立，所以還是只從按鈕的 onPress 呼叫，
+ * 絕對不要包進 useEffect 自動觸發：授權畫面對長輩來說觀感等同釣魚頁，
+ * 一定要有人親手按下去才跳轉，不能畫面一開就自己轉走。
  */
 export async function requestLineLogin(): Promise<void> {
   try {
@@ -110,4 +116,15 @@ export async function requestLineLogin(): Promise<void> {
   } catch {
     // 靜默失敗，不擋使用者。
   }
+}
+
+/** 登出。清掉快取的身分，讓呼叫端（App.tsx）把畫面切回登入畫面。 */
+export function logout(): void {
+  try {
+    const liff = (window as any).liff;
+    if (liff?.isLoggedIn?.()) liff.logout();
+  } catch {
+    // 靜默失敗，不擋使用者。
+  }
+  cached = null;
 }

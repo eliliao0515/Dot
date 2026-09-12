@@ -6,9 +6,11 @@ import { C, fz } from './src/ui/theme';
 import { LESSONS, MAP_NODES, CHAT_ROOMS } from './src/content/lessons';
 import ChatSim from './src/sim/ChatSim';
 import ChatsListScreen, { ChatRoomItem } from './src/sim/ChatsListScreen';
+import HomeProfileScreen from './src/sim/HomeProfileScreen';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
-import { initLineAuth, type LineUser } from './src/auth/lineAuth';
+import LoginGate from './src/shell/LoginGate';
+import { initLineAuth, requestLineLogin, logout, type LineUser } from './src/auth/lineAuth';
 import {
   loadProgress,
   recordStageDone,
@@ -24,7 +26,8 @@ type Route =
   | { name: 'sim'; lessonId: string; stageIndex: number }
   | { name: 'realDevice'; lessonId: string }
   | { name: 'done'; lessonId: string }
-  | { name: 'practice' };
+  | { name: 'practice' }
+  | { name: 'home' };
 
 /**
  * 聊天列表的假聯絡人內容（CHAT_ROOMS）跟操作狀態（MAP_NODES）分開存放，
@@ -108,25 +111,30 @@ function Root() {
   const { base } = useScale();
   const [route, setRoute] = useState<Route>({ name: 'chats' });
   const [lineUser, setLineUser] = useState<LineUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [progress, setProgress] = useState<Progress>(EMPTY_PROGRESS);
 
-  // 身分是加分項：拿不到就匿名繼續，畫面不等它。
+  // 身分是加分項：拿不到就匿名繼續，畫面不等它 —— 這在原生端仍然成立。
+  // 網頁端則是例外：2026-09-13 使用者已知情推翻「不要註冊登入」，
+  // 全站改成強制登入，見下面渲染時的 showGate 判斷。
   // 順序有意義 — 進度的 key 依身分而定，所以要等身分解析完才讀進度。
   useEffect(() => {
     let alive = true;
-    initLineAuth()
-      .then((user) => {
-        if (alive) setLineUser(user);
-        return loadProgress();
-      })
-      .then((p) => {
+    initLineAuth().then((user) => {
+      if (!alive) return;
+      setLineUser(user);
+      setAuthChecked(true);
+      loadProgress().then((p) => {
         if (alive) setProgress(p);
       });
+    });
     return () => {
       alive = false;
     };
   }, []);
   const lesson = 'lessonId' in route ? LESSONS[route.lessonId] : undefined;
+  // 只在網頁端強制登入 —— 原生端還沒有真正的 LIFF 串接，硬擋只會讓原生版整個開不了機。
+  const showGate = Platform.OS === 'web' && authChecked && lineUser === null;
 
   function advance() {
     if (route.name !== 'sim' || !lesson) return;
@@ -144,65 +152,89 @@ function Root() {
       <ExpoStatusBar style="dark" />
       <DebugBadge user={lineUser} />
 
-      {route.name === 'chats' ? (
-        <ChatsListScreen
-          rooms={buildRoomItems(progress)}
-          base={base}
-          pinned={{
-            title: '綜合練習',
-            sub: '隨機出題，複習學過的技能',
-            onPress: () => setRoute({ name: 'practice' }),
-          }}
-          onOpenRoom={(id) => {
-            const node = MAP_NODES.find((n) => n.id === id);
-            if (!node?.lessonId) return;
-            const target = LESSONS[node.lessonId];
-            setRoute({
-              name: 'sim',
-              lessonId: node.lessonId,
-              // 接著上次做到的地方，不是每次都從頭。
-              stageIndex: resumeStageIndex(progress, node.lessonId, target.stages.length),
-            });
-          }}
-        />
-      ) : null}
+      {!authChecked ? null : showGate ? (
+        <LoginGate onPressLogin={() => requestLineLogin()} />
+      ) : (
+        <>
+          {route.name === 'chats' ? (
+            <ChatsListScreen
+              rooms={buildRoomItems(progress)}
+              base={base}
+              pinned={{
+                title: '綜合練習',
+                sub: '隨機出題，複習學過的技能',
+                onPress: () => setRoute({ name: 'practice' }),
+              }}
+              onOpenRoom={(id) => {
+                const node = MAP_NODES.find((n) => n.id === id);
+                if (!node?.lessonId) return;
+                const target = LESSONS[node.lessonId];
+                setRoute({
+                  name: 'sim',
+                  lessonId: node.lessonId,
+                  // 接著上次做到的地方，不是每次都從頭。
+                  stageIndex: resumeStageIndex(progress, node.lessonId, target.stages.length),
+                });
+              }}
+              onPressHome={() => {
+                // 原生端目前永遠是匿名（還沒有真正的 LIFF 串接），沒有身分可以顯示，
+                // 這裡就單純不動作 —— 跟這顆分頁在網頁端已登入才會出現的內容一致。
+                if (lineUser) setRoute({ name: 'home' });
+              }}
+            />
+          ) : null}
 
-      {route.name === 'practice' ? (
-        <PracticeSession onExit={() => setRoute({ name: 'chats' })} />
-      ) : null}
+          {route.name === 'home' && lineUser ? (
+            <HomeProfileScreen
+              user={lineUser}
+              base={base}
+              onBack={() => setRoute({ name: 'chats' })}
+              onLogout={() => {
+                logout();
+                setLineUser(null);
+                setRoute({ name: 'chats' });
+              }}
+            />
+          ) : null}
 
-      {route.name === 'sim' && lesson ? (
-        <View style={{ flex: 1 }}>
-          <TeachingFrame
-            stageIndex={route.stageIndex}
-            total={lesson.stages.length}
-            stage={lesson.stages[route.stageIndex].stage}
-            onExit={() => setRoute({ name: 'chats' })}
-          />
-          <ChatSim
-            key={`${lesson.id}-${route.stageIndex}`}
-            lesson={lesson}
-            script={lesson.stages[route.stageIndex]}
-            onDone={advance}
-          />
-        </View>
-      ) : null}
+          {route.name === 'practice' ? (
+            <PracticeSession onExit={() => setRoute({ name: 'chats' })} />
+          ) : null}
 
-      {route.name === 'realDevice' && lesson ? (
-        <RealDeviceScreen
-          lesson={lesson}
-          onConfirm={() => {
-            // 只有真的在自己手機上做到才記。跳過不算，也不會被追究。
-            recordRealDevice(progress, lesson.id).then(setProgress);
-            setRoute({ name: 'done', lessonId: lesson.id });
-          }}
-          onLater={() => setRoute({ name: 'done', lessonId: lesson.id })}
-        />
-      ) : null}
+          {route.name === 'sim' && lesson ? (
+            <View style={{ flex: 1 }}>
+              <TeachingFrame
+                stageIndex={route.stageIndex}
+                total={lesson.stages.length}
+                stage={lesson.stages[route.stageIndex].stage}
+                onExit={() => setRoute({ name: 'chats' })}
+              />
+              <ChatSim
+                key={`${lesson.id}-${route.stageIndex}`}
+                lesson={lesson}
+                script={lesson.stages[route.stageIndex]}
+                onDone={advance}
+              />
+            </View>
+          ) : null}
 
-      {route.name === 'done' && lesson ? (
-        <DoneScreen lesson={lesson} onContinue={() => setRoute({ name: 'chats' })} />
-      ) : null}
+          {route.name === 'realDevice' && lesson ? (
+            <RealDeviceScreen
+              lesson={lesson}
+              onConfirm={() => {
+                // 只有真的在自己手機上做到才記。跳過不算，也不會被追究。
+                recordRealDevice(progress, lesson.id).then(setProgress);
+                setRoute({ name: 'done', lessonId: lesson.id });
+              }}
+              onLater={() => setRoute({ name: 'done', lessonId: lesson.id })}
+            />
+          ) : null}
+
+          {route.name === 'done' && lesson ? (
+            <DoneScreen lesson={lesson} onContinue={() => setRoute({ name: 'chats' })} />
+          ) : null}
+        </>
+      )}
     </SafeAreaView>
   );
 }

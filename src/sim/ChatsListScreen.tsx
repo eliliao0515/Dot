@@ -208,11 +208,13 @@ export default function ChatsListScreen({
   base,
   pinned,
   onOpenRoom,
+  onPressHome,
 }: {
   rooms: ChatRoomItem[];
   base: number;
   pinned?: PinnedRoomItem;
   onOpenRoom: (id: string) => void;
+  onPressHome: () => void;
 }) {
   const { msg, show } = useToast();
 
@@ -277,7 +279,7 @@ export default function ChatsListScreen({
           icon={<HomeTab size={fz(base, 1.4)} color={C.ink3} />}
           label="Home"
           base={base}
-          onPress={() => show('這個功能還沒做好。')}
+          onPress={onPressHome}
         />
         <BottomTab
           icon={<ChatsTab size={fz(base, 1.4)} color={C.chatGreen} />}

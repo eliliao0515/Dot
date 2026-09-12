@@ -29,3 +29,7 @@ export async function getIdToken(): Promise<string | null> {
 export async function requestLineLogin(): Promise<void> {
   // 原生端沒有 LIFF，什麼都不做。
 }
+
+export function logout(): void {
+  // 原生端沒有 LIFF，什麼都不做。
+}
