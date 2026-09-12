@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, Platform } from 'react-native';
+import { View, Pressable, StyleSheet, Platform, TextInput } from 'react-native';
 import { T } from '../ui/Scale';
-import { C, fz } from '../ui/theme';
+import { C, fz, textBase } from '../ui/theme';
 import {
-  Back, Mic, Play, Pause, VideoCam, Menu, Smile,
+  Back, Mic, Play, Pause, VideoCam, Menu, Smile, Send,
   ThumbsUp, Heart, Laugh, Ok, Flower, Camera, Person,
 } from '../ui/Icons';
 import { Bubble, StickerId } from '../engine/types';
@@ -336,7 +336,9 @@ export function StickerPanel({ base, onPick }: {
 
 export function SimInputBar({
   base,
-  onWrongTap,
+  draftText,
+  onChangeDraftText,
+  onSendDraftText,
   onPressPlus,
   onPressSticker,
   onPressMic,
@@ -344,7 +346,9 @@ export function SimInputBar({
   stickerOpen,
 }: {
   base: number;
-  onWrongTap: () => void;
+  draftText: string;
+  onChangeDraftText: (text: string) => void;
+  onSendDraftText: () => void;
   onPressPlus: () => void;
   onPressSticker: () => void;
   onPressMic: () => void;
@@ -352,24 +356,30 @@ export function SimInputBar({
   stickerOpen: boolean;
 }) {
   const micSize = fz(base, 2.4);
+  const hasDraft = draftText.length > 0;
   return (
     <View style={s.inputBar}>
       <Pressable onPress={onPressPlus} hitSlop={10} style={[s.roundIcon, attachOpen && s.roundIconOn]}>
         <T style={[s.plus, { fontSize: fz(base, 1.35) }]}>＋</T>
       </Pressable>
 
-      <Pressable style={s.field} onPress={onWrongTap}>
-        <T style={[s.fieldText, { fontSize: fz(base, 0.88), lineHeight: fz(base, 1.3) }]}>
-          輸入訊息
-        </T>
-      </Pressable>
+      <TextInput
+        value={draftText}
+        onChangeText={onChangeDraftText}
+        placeholder="輸入訊息"
+        placeholderTextColor="#98A0A6"
+        allowFontScaling={false}
+        returnKeyType="send"
+        onSubmitEditing={onSendDraftText}
+        style={[textBase, s.field, { fontSize: fz(base, 0.88), lineHeight: fz(base, 1.3), color: C.ink }]}
+      />
 
       <Pressable onPress={onPressSticker} hitSlop={10} style={[s.roundIcon, stickerOpen && s.roundIconOn]}>
         <Smile size={fz(base, 1.15)} color="#6B747A" weight={2.2} />
       </Pressable>
 
       <Pressable
-        onPress={onPressMic}
+        onPress={hasDraft ? onSendDraftText : onPressMic}
         // 手抖的人常按不準，把觸控範圍放寬 — 手勢從長按改成點一下，這件事不受影響。
         hitSlop={14}
         pressRetentionOffset={{ top: 60, bottom: 60, left: 60, right: 60 }}
@@ -379,7 +389,7 @@ export function SimInputBar({
           pressed && s.micActive,
         ]}
       >
-        <Mic size={fz(base, 1.2)} />
+        {hasDraft ? <Send size={fz(base, 1.2)} color="#fff" /> : <Mic size={fz(base, 1.2)} />}
       </Pressable>
     </View>
   );
@@ -580,7 +590,6 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 13,
   },
-  fieldText: { color: '#98A0A6' },
   mic: { backgroundColor: C.chatGreen, alignItems: 'center', justifyContent: 'center' },
   micActive: { backgroundColor: '#0E9A59' },
 });

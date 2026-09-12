@@ -121,6 +121,7 @@ export default function ChatSim({
 }) {
   const { base } = useScale();
   const [sent, setSent] = useState<Bubble[]>([]);
+  const [draftText, setDraftText] = useState('');
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [recorderPhase, setRecorderPhase] = useState<'idle' | 'recording' | 'stopped'>('idle');
   const [seconds, setSeconds] = useState(0);
@@ -145,6 +146,7 @@ export default function ChatSim({
   // 換一階段就重置，不要把上一階的狀態帶過來。
   useEffect(() => {
     setSent([]);
+    setDraftText('');
     setRecorderOpen(false);
     setRecorderPhase('idle');
     setSeconds(0);
@@ -265,13 +267,31 @@ export default function ChatSim({
     scheduleRead(bubble.id);
   }
 
-  function sendText(text: string) {
+  function appendTextBubble(text: string) {
     appendSent({ id: `txt-${Date.now()}`, from: 'me', kind: 'text', text });
+  }
+
+  /** 點預設回覆膠囊。這是「看訊息、回訊息」課真正的過關路徑。 */
+  function sendQuickReply(text: string) {
+    appendTextBubble(text);
     if (lesson.target.node === 'reply') {
       setSucceeded(true);
       setTimeout(onDone, 1200);
     }
   }
+
+  /**
+   * 輸入列打字送出。純粹是額外的擬真手感，不管 target.node 是什麼都不算過關——
+   * 不要讓長輩用打字繞過這一課真正要練的動作（例如「看訊息、回訊息」課要練的
+   * 是點現成的話，不是打字）。
+   */
+  function sendDraftText() {
+    const text = draftText.trim();
+    if (!text) return;
+    appendTextBubble(text);
+    setDraftText('');
+  }
+
   function sendPhoto(label: string) {
     appendSent({ id: `photo-${Date.now()}`, from: 'me', kind: 'photo', label });
   }
@@ -469,12 +489,14 @@ export default function ChatSim({
           {/* reply 課的建議訊息就是過關目標本體，跟麥克風/貼圖鍵一樣不受 showCoach 影響 —
               guided 階段的教練文字說「看下面幾個現成的話」，這排膠囊得跟著一起顯示才點得到。 */}
           {lesson.target.node === 'reply' && !succeeded && panel === 'none' ? (
-            <QuickReplyRow base={base} onPick={sendText} />
+            <QuickReplyRow base={base} onPick={sendQuickReply} />
           ) : null}
 
           <SimInputBar
             base={base}
-            onWrongTap={handleWrongTap}
+            draftText={draftText}
+            onChangeDraftText={setDraftText}
+            onSendDraftText={sendDraftText}
             onPressPlus={pressPlus}
             onPressSticker={pressSticker}
             onPressMic={openRecorder}
