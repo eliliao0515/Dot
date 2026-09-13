@@ -208,13 +208,13 @@ export const LESSONS: Record<string, Lesson> = {
   [readReplyLesson.id]: readReplyLesson,
 };
 
+// video-call 跟 anti-fraud 兩個節點先暫時拿掉，等各自的課做出來再放回來
+// （video-call 的規格見 specs/08-incoming-video-call-lesson.md）。
 export const MAP_NODES: MapNode[] = [
   { id: 'read-reply', label: '看訊息、回訊息', sub: '已經會了', state: 'done', lessonId: 'read-reply' },
   { id: 'sticker', label: '傳貼圖', sub: '已經會了', state: 'done', lessonId: 'sticker' },
   { id: 'voice-msg', label: '傳語音訊息', sub: '第 1 次練習，共 3 次', state: 'now', lessonId: 'voice-msg' },
-  { id: 'video-call', label: '跟孫子視訊', sub: '還沒開始', state: 'todo' },
   { id: 'save-photo', label: '把照片存起來', sub: '還沒開始', state: 'todo', lessonId: 'save-photo' },
-  { id: 'anti-fraud', label: '認出假訊息', sub: '還沒開始', state: 'todo' },
 ];
 
 /**
@@ -247,27 +247,11 @@ export const CHAT_ROOMS: ChatRoomPreview[] = [
     time: '現在',
   },
   {
-    id: 'video-call',
-    contactName: '小宇（孫子）',
-    avatarGlyph: 'video',
-    avatarColor: '#7A6B99',
-    preview: '阿嬤，我們視訊啦',
-    time: '3 天前',
-  },
-  {
     id: 'save-photo',
     contactName: '阿美',
     avatarGlyph: 'camera',
     avatarColor: '#5B8C6B',
     preview: '你看這個高麗菜多少錢一顆',
     time: '5 天前',
-  },
-  {
-    id: 'anti-fraud',
-    contactName: '客服中心',
-    avatarGlyph: 'alert',
-    avatarColor: '#6B7A99',
-    preview: '您的帳戶異常，請點擊連結確認',
-    time: '上週',
   },
 ];
