@@ -52,6 +52,9 @@ function buildRoomItems(progress: Progress): ChatRoomItem[] {
       avatarGlyph: room.avatarGlyph,
       avatarColor: room.avatarColor,
       emphasized: state === 'now',
+      // 還沒做完的課都要有未讀提示，不是只有「現在」那一列——沒有真正課程的
+      // 佔位聊天室不算，那些沒有東西可以「補完」。
+      unread: !!node.lessonId && state !== 'done',
       // 永遠可點。不鎖關卡是已定案的原則 — 擋住他只會讓他關掉 App 去問女兒。
       actionable: !!node.lessonId,
     };

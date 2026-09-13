@@ -32,6 +32,8 @@ export type ChatRoomItem = {
   avatarColor: string;
   /** 沿用 MAP_NODES 的 state === 'now'，用來決定這一列要不要有「現在」強調樣式。 */
   emphasized: boolean;
+  /** 這一列的課還沒做完，要不要顯示未讀提示。跟 emphasized 是兩件獨立的事。 */
+  unread: boolean;
   /** 這一列點下去是不是真的會開始一段教學流程；false 的話畫面自己顯示中性提示。 */
   actionable: boolean;
 };
@@ -159,7 +161,7 @@ function RoomRow({
 
       <View style={s.roomRight}>
         <T style={[s.roomTime, { fontSize: fz(base, 0.72), lineHeight: fz(base, 1.2) }]}>{room.time}</T>
-        {room.emphasized ? (
+        {room.unread ? (
           <View style={s.unreadBadge}>
             <T style={[s.unreadBadgeText, { fontSize: fz(base, 0.68), lineHeight: fz(base, 1) }]}>1</T>
           </View>
