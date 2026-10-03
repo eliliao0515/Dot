@@ -11,6 +11,9 @@ import CallSession, { type CallResult } from './CallSession';
 import { primeCallAudio, type MicHandle } from './callAudio';
 import { freeCall } from '../content/calls';
 import type { LineUser } from '../auth/lineAuth';
+import EdgeSwipeBack from '../sim/EdgeSwipeBack';
+import { DEFAULT_GESTURE_THRESHOLDS } from '../content/gestures';
+import { useHistoryBack } from '../ui/useHistoryBack';
 
 const UNBUILT = '這個功能還沒做好。';
 
@@ -66,6 +69,47 @@ export default function LineSimulatorScreen({ user, onExit }: { user: LineUser |
 
   const room = roomId ? SANDBOX_ROOMS.find((r) => r.id === roomId) : undefined;
 
+  // 在聊天室裡按手機或瀏覽器的上一頁，回到聊天列表，而不是整個離開模擬器。
+  useHistoryBack(roomId !== null, () => setRoomId(null));
+
+  // 聊天列表＋底部分頁。滑開聊天室時露出來的也是這一個。
+  const home = (
+    <>
+      <View style={{ flex: 1 }}>
+        {tab === 'chats' ? (
+          <ChatsListScreen
+            rooms={SANDBOX_ROOMS.map((r) => ({
+              id: r.id,
+              title: r.contactName,
+              preview: r.preview,
+              time: r.time,
+              avatarGlyph: r.avatarGlyph,
+              avatarColor: r.avatarColor,
+              emphasized: false,
+              unread: false,
+              actionable: true,
+            }))}
+            base={base}
+            onOpenRoom={setRoomId}
+          />
+        ) : null}
+        {tab === 'home' && user ? (
+          <HomeProfileScreen user={user} base={base} actionLabel="離開 LINE 模擬器" onLogout={onExit} />
+        ) : null}
+      </View>
+      <BottomTabBar
+        active={tab}
+        base={base}
+        // 沒有身分（原生端）就沒有 Home 畫面可以放離開鍵，直接離開模擬器。
+        onPressHome={() => (user ? setTab('home') : onExit())}
+        onPressChats={() => setTab('chats')}
+        onPressDiscover={() => show(UNBUILT)}
+        onPressToday={() => show(UNBUILT)}
+        onPressWallet={() => show(UNBUILT)}
+      />
+    </>
+  );
+
   function handleCallEnd(result: CallResult) {
     setCall(null);
     if (!room) return;
@@ -80,51 +124,25 @@ export default function LineSimulatorScreen({ user, onExit }: { user: LineUser |
     <View style={s.wrap}>
       <View style={{ flex: 1 }}>
         {room ? (
-          <LineChatScreen
-            key={room.id}
-            contact={room.contactName}
-            incoming={[
-              ...room.messages.map((bubble) => ({ bubble, contact: room.contactName })),
-              ...(extras[room.id] ?? []),
-            ]}
-            onAction={handleAction}
-            onPressBack={() => setRoomId(null)}
-          />
-        ) : (
-          <>
-            <View style={{ flex: 1 }}>
-              {tab === 'chats' ? (
-                <ChatsListScreen
-                  rooms={SANDBOX_ROOMS.map((r) => ({
-                    id: r.id,
-                    title: r.contactName,
-                    preview: r.preview,
-                    time: r.time,
-                    avatarGlyph: r.avatarGlyph,
-                    avatarColor: r.avatarColor,
-                    emphasized: false,
-                    unread: false,
-                    actionable: true,
-                  }))}
-                  base={base}
-                  onOpenRoom={setRoomId}
-                />
-              ) : null}
-              {tab === 'home' && user ? (
-                <HomeProfileScreen user={user} base={base} actionLabel="離開 LINE 模擬器" onLogout={onExit} />
-              ) : null}
-            </View>
-            <BottomTabBar
-              active={tab}
-              base={base}
-              // 沒有身分（原生端）就沒有 Home 畫面可以放離開鍵，直接離開模擬器。
-              onPressHome={() => (user ? setTab('home') : onExit())}
-              onPressChats={() => setTab('chats')}
-              onPressDiscover={() => show(UNBUILT)}
-              onPressToday={() => show(UNBUILT)}
-              onPressWallet={() => show(UNBUILT)}
+          // 跟真 iPhone 一樣，從左邊緣往右滑回到聊天列表（specs/v2/P5-gestures.md）。
+          <EdgeSwipeBack
+            thresholds={DEFAULT_GESTURE_THRESHOLDS.edgeSwipe}
+            underlay={home}
+            onSwipeBack={() => setRoomId(null)}
+          >
+            <LineChatScreen
+              key={room.id}
+              contact={room.contactName}
+              incoming={[
+                ...room.messages.map((bubble) => ({ bubble, contact: room.contactName })),
+                ...(extras[room.id] ?? []),
+              ]}
+              onAction={handleAction}
+              onPressBack={() => setRoomId(null)}
             />
-          </>
+          </EdgeSwipeBack>
+        ) : (
+          home
         )}
 
         {room && call ? (

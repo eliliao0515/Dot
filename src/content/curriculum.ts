@@ -1,11 +1,11 @@
 import type { Level, Unit } from '../engine/types';
 import { LESSONS } from './lessons';
+import { EDGE_BACK } from './gestures';
 
 /**
  * v2 課本目錄（specs/v2/00-overview.md §3）。
  *
- * 單元一、二的關卡名稱是草稿，Phase 3／4 開工前會逐條審過；
- * 現在全部是 comingSoon，只是讓目錄架構先看得見。
+ * 單元一的關卡名稱是草稿；單元二照 specs/v2/P5-gestures.md，還沒做的先列成 comingSoon（照樣能點，不鎖關卡）。
  * 單元三的 scenario 關卡直接引用 v1 的 Lesson，副標題沿用課程標題。
  */
 
@@ -20,7 +20,6 @@ function soon(id: string, title: string, glyph: Level['glyph']): Level {
 const LEVEL_LIST: Level[] = [
   // v2 P4：目前關卡頁實際列出的
   soon('sym-quiz', '符號選擇題', 'search'),
-  soon('ges-basic', '基本手勢', 'touch'),
 
   // 單元一　認識符號
   soon('sym-back', '往回走、回首頁', 'back'),
@@ -31,14 +30,12 @@ const LEVEL_LIST: Level[] = [
   soon('sym-settings', '設定與通知', 'menu'),
   soon('sym-careful', '不要亂按的', 'trash'),
 
-  // 單元二　手勢
-  soon('ges-tap', '點一下', 'touch'),
-  soon('ges-long-press', '長按', 'touch'),
-  soon('ges-scroll', '上下捲動', 'touch'),
-  soon('ges-swipe', '左右滑', 'touch'),
-  soon('ges-drag', '拖曳', 'touch'),
-  soon('ges-double-tap', '雙擊', 'touch'),
-  soon('ges-pinch', '雙指縮放', 'touch'),
+  // 單元二　手勢（specs/v2/P5-gestures.md §3）：猜猜看，不走鷹架
+  { id: 'ges-edge-back', kind: 'gesture', title: '回上一頁', subtitle: '不用按返回鍵也能回去', glyph: 'back', script: EDGE_BACK },
+  soon('ges-chat-preview', '先偷看訊息', 'touch'),
+  soon('ges-message-menu', '訊息的更多選項', 'touch'),
+  soon('ges-double-tap', '把照片放大', 'touch'),
+  soon('ges-pinch', '兩根手指放大縮小', 'touch'),
 
   // 單元三　LINE 情境
   scenario('read-reply', '看訊息、回訊息', 'chat'),
@@ -68,7 +65,7 @@ export const UNITS: Unit[] = [
     id: 'gestures',
     title: '練習手勢',
     summary: '用手指按、壓、滑，每一種手勢練一練。',
-    levelIds: ['ges-basic'],
+    levelIds: ['ges-edge-back', 'ges-chat-preview', 'ges-message-menu', 'ges-double-tap', 'ges-pinch'],
   },
   {
     id: 'scenarios',

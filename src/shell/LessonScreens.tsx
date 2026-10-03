@@ -7,8 +7,9 @@ import { Lesson } from '../engine/types';
 import BigButton from './BigButton';
 
 /** 唯一真正決定成敗的一關：離開這個 App，到真手機上做一次。 */
-export function RealDeviceScreen({ lesson, onConfirm, onLater }: {
-  lesson: Lesson;
+export function RealDeviceScreen({ realDevice, confirmLabel = '我傳出去了', onConfirm, onLater }: {
+  realDevice: { headline: string; steps: string[] };
+  confirmLabel?: string;
   onConfirm: () => void;
   onLater: () => void;
 }) {
@@ -20,11 +21,11 @@ export function RealDeviceScreen({ lesson, onConfirm, onLater }: {
           里程碑
         </T>
         <T systemScaling style={[s.title, { fontSize: fz(base, 1.45), lineHeight: fz(base, 2.05) }]}>
-          {lesson.realDevice.headline}
+          {realDevice.headline}
         </T>
 
         <View style={s.steps}>
-          {lesson.realDevice.steps.map((step, i) => (
+          {realDevice.steps.map((step, i) => (
             <View key={i} style={s.step}>
               <View style={s.stepNum}>
                 <T systemScaling style={[s.stepNumText, { fontSize: fz(base, 0.85) }]}>
@@ -40,7 +41,7 @@ export function RealDeviceScreen({ lesson, onConfirm, onLater }: {
       </ScrollView>
 
       <View style={[s.footer, { gap: 11 }]}>
-        <BigButton label="我傳出去了" tone="danger" onPress={onConfirm} />
+        <BigButton label={confirmLabel} tone="danger" onPress={onConfirm} />
         <BigButton label="等一下再做" tone="ghost" onPress={onLater} />
       </View>
     </View>
