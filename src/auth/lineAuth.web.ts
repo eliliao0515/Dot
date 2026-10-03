@@ -118,6 +118,19 @@ export async function requestLineLogin(): Promise<void> {
   }
 }
 
+/**
+ * LIFF 的 access token，送給點數伺服器，由伺服器自己跟 LINE 驗證是誰（server/src/index.ts）。
+ * 拿不到（沒登入、SDK 沒載入）就是 null。
+ */
+export async function getAccessToken(): Promise<string | null> {
+  try {
+    await loadSdk();
+    return (window as any).liff?.getAccessToken?.() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** 登出。清掉快取的身分，讓呼叫端（App.tsx）把畫面切回登入畫面。 */
 export function logout(): void {
   try {

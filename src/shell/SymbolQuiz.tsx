@@ -125,8 +125,8 @@ export default function SymbolQuiz({
 }: {
   /** 這一局之前的累積點數（結算畫面要顯示加總）。 */
   totalPoints: number;
-  /** 一局結束：把這一局得到的點數交給外層存起來。 */
-  onFinishRound: (earned: number) => void;
+  /** 一局結束：把答對幾題交給外層；點數由點數模組（和伺服器）依規則計算。 */
+  onFinishRound: (correct: number) => void;
   onExit: () => void;
 }) {
   const { base } = useScale();
@@ -162,7 +162,7 @@ export default function SymbolQuiz({
       setPicked(null);
       return;
     }
-    onFinishRound(correct * POINTS.quizCorrect + POINTS.quizComplete);
+    onFinishRound(correct);
     setPhase('result');
   }
 

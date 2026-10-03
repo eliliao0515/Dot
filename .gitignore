@@ -12,3 +12,7 @@ info.jpg
 
 # 本機環境變數（例如開發者雜湊名單）
 .env*.local
+
+# Cloudflare Worker 本機設定與暫存
+server/.dev.vars
+server/.wrangler/

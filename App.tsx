@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, SafeAreaView, StatusBar, Platform, StyleSheet } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { ScaleProvider, T, useScale } from './src/ui/Scale';
@@ -12,8 +12,16 @@ import LineSimulatorScreen from './src/shell/LineSimulatorScreen';
 import SimulatorsScreen from './src/shell/SimulatorsScreen';
 import { useHistoryBack } from './src/ui/useHistoryBack';
 import SymbolQuiz from './src/shell/SymbolQuiz';
-import { POINTS } from './src/content/points';
-import { loadPoints, addPoints, EMPTY_POINTS, type Points } from './src/storage/points';
+import {
+  loadPoints,
+  configurePoints,
+  awardQuizRound,
+  awardStage,
+  awardRealDevice,
+  deleteMyPoints,
+  EMPTY_POINTS,
+  type Points,
+} from './src/storage/points';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
 import LoginGate from './src/shell/LoginGate';
@@ -24,7 +32,7 @@ import { Book } from './src/ui/hig/glyphs';
 import { H } from './src/ui/hig/tokens';
 import KeyboardViewport from './src/ui/KeyboardViewport';
 import type { RowStatus } from './src/ui/hig/ListRow';
-import { initLineAuth, requestLineLogin, logout, type LineUser } from './src/auth/lineAuth';
+import { initLineAuth, requestLineLogin, logout, getAccessToken, type LineUser } from './src/auth/lineAuth';
 import { sha256Hex } from './src/auth/devAccess';
 import {
   loadProgress,
@@ -143,9 +151,6 @@ function Root() {
   const [authChecked, setAuthChecked] = useState(false);
   const [progress, setProgress] = useState<Progress>(EMPTY_PROGRESS);
   const [points, setPoints] = useState<Points>(EMPTY_POINTS);
-  // 加點數一律從最新的值往上加，避免連續兩次加點時用到舊的值。
-  const pointsRef = useRef<Points>(EMPTY_POINTS);
-  pointsRef.current = points;
 
   // 身分是加分項：拿不到就匿名繼續，畫面不等它 —— 這在原生端仍然成立。
   // 網頁端則是例外：2026-09-13 使用者已知情推翻「不要註冊登入」，
@@ -158,6 +163,11 @@ function Root() {
       const user = liffUser ?? devLoginUser();
       setLineUser(user);
       setAuthChecked(true);
+      // 點數存在伺服器，依 LINE 身分。開發模式的假身分送 "dev:<id>"，只有本機伺服器（DEV_MODE）認得。
+      configurePoints({
+        identity: user?.userId ?? null,
+        token: liffUser ? getAccessToken : async () => (user ? `dev:${user.userId}` : null),
+      });
       loadPoints().then((p) => {
         if (alive) setPoints(p);
       });
@@ -176,19 +186,12 @@ function Root() {
   // 全螢幕的畫面（課程、LINE 模擬器）打開時，按手機或瀏覽器的上一頁就回到原本的分頁。
   useHistoryBack(stack !== null, () => setStack(null));
 
-  /** 點數只加不扣（護欄見 src/content/points.ts）。 */
-  function award(amount: number, opts: { quizRound?: boolean } = {}) {
-    addPoints(pointsRef.current, amount, opts).then((p) => {
-      pointsRef.current = p;
-      setPoints(p);
-    });
-  }
 
   function advance() {
     if (!stack || stack.name !== 'sim' || !lesson) return;
     // 第一次完成這一步才給點數；重做已經做過的步驟不再給，避免同一步一直刷。
     const doneBefore = progress.lessons[lesson.id]?.stagesDone ?? 0;
-    if (stack.stageIndex >= doneBefore) award(POINTS.stageDone);
+    if (stack.stageIndex >= doneBefore) awardStage(lesson.id, stack.stageIndex).then(setPoints);
     recordStageDone(progress, lesson.id, stack.stageIndex).then(setProgress);
     const next = stack.stageIndex + 1;
     if (next < lesson.stages.length) {
@@ -241,7 +244,7 @@ function Root() {
               lesson={lesson}
               onConfirm={() => {
                 // 只有真的在自己手機上做到才記。跳過不算，也不會被追究。
-                if (!progress.lessons[lesson.id]?.realDeviceDone) award(POINTS.realDevice);
+                if (!progress.lessons[lesson.id]?.realDeviceDone) awardRealDevice(lesson.id).then(setPoints);
                 recordRealDevice(progress, lesson.id).then(setProgress);
                 setStack({ name: 'done', lessonId: lesson.id });
               }}
@@ -260,7 +263,7 @@ function Root() {
           {stack.name === 'symbolQuiz' ? (
             <SymbolQuiz
               totalPoints={points.total}
-              onFinishRound={(earned) => award(earned, { quizRound: true })}
+              onFinishRound={(correct) => awardQuizRound(correct).then(setPoints)}
               onExit={() => setStack(null)}
             />
           ) : null}
@@ -285,6 +288,12 @@ function Root() {
               <MeScreen
                 user={lineUser}
                 points={points.total}
+                onDeletePoints={() =>
+                  deleteMyPoints().then((ok) => {
+                    if (ok) setPoints(EMPTY_POINTS);
+                    return ok;
+                  })
+                }
                 onLogout={() => {
                   logout();
                   setLineUser(null);
