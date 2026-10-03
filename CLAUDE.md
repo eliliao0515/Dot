@@ -70,17 +70,17 @@ npx expo start --web
 ## 架構
 
 ```
-App.tsx                    路由（課本／我 兩個分頁 + 全螢幕練習 stack）+ 鷹架推進 + 教學外框
+App.tsx                    路由（關卡／模擬器／我 三個分頁 + 全螢幕 stack：課程、LINE 模擬器）+ 鷹架推進
 src/engine/types.ts        腳本引擎的資料結構 ← 真正的資產（含 v2 的 Unit / Level）
 src/content/curriculum.ts  課本目錄：單元、關卡、推薦順序
 src/content/lessons.ts     LINE 情境課程腳本（v1 Lesson）
 src/sim/                   被模擬的 App（parts.tsx 元件、ChatSim.tsx 容器）
-src/shell/                 教學外殼：TextbookHome、MeScreen、LessonScreens、LoginGate
+src/shell/                 教學外殼：TextbookHome（關卡頁）、SimulatorsScreen、LineSimulatorScreen、ScenarioRunner、CallSession、MeScreen、LessonScreens、LoginGate
 src/ui/hig/                v2 外殼元件庫（參考 Apple HIG / SwiftUI）：NavHeader、GroupedList、ListRow、Buttons、TabBar、Sheet
 src/ui/                    theme.ts、Scale.tsx、Icons.tsx
 ```
 
-首頁是課本目錄（`TextbookHome`），不再是仿 LINE 聊天列表。`ChatsListScreen`、`BottomTabBar`、`HomeProfileScreen` 暫時沒被引用，保留給 Phase 2 的沙盒。
+打開 App 預設在「關卡」分頁（`TextbookHome`），分成認識符號、練習手勢、情境挑戰三類（`src/content/curriculum.ts`）。中間「模擬器」分頁點 LINE 會推入整個畫面的 LINE 模擬器（`LineSimulatorScreen`，沒有我們的底部分頁），從 LINE Home 分頁的「離開 LINE 模擬器」或手機／瀏覽器上一頁離開（`src/ui/useHistoryBack`）。P2 只有開發者看得到的「我的沙盒」已由這個分頁取代（2026-10-04）。
 
 **已知分層違規（Phase 2 會修）**：`ChatSim` 目前直接吃 `lesson`，紅圈、引導條、「卡住了」都寫在裡面，違反下面第一條。新的程式碼不要再加深這個耦合。
 
@@ -137,6 +137,11 @@ v2 的 HIG 外殼：淺灰底 `#F2F2F7`、白色卡片加描邊、靛藍當強�
 ## 不要做的事
 
 這些都討論過並否決了。**如果要重提，先問使用者，不要自己加。**
+
+> **2026-10-04 更新，「不計分」已被使用者明確推翻。** App 主要用在工作坊，使用者決定加入**可累積、不會消失的點數**
+> 當作現場小比賽。已確認的護欄：點數只加不扣、答錯不扣分也不顯示紅色、不倒數計時、不依作答速度加分、
+> 不做 streak、排行榜先不做（要做的話要先取得長輩同意顯示名稱）。詳見 `specs/v2/P4-restructure-quiz-points.md`。
+> 下面這段的理由仍然成立，所以除了點數本身，其餘機制照舊不要。
 
 **遊戲化的競爭與稀缺機制，全部不要：**
 紅心 / 體力、連續天數 streak、寶石、排行榜、聯賽、限時挑戰、分數、星等、百分比、失敗音效。

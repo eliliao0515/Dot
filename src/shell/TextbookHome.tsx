@@ -32,7 +32,7 @@ function LevelIcon({ glyph }: { glyph: LevelGlyph }) {
 }
 
 /**
- * 課本首頁（specs/v2/P1-textbook-shell.md）。
+ * 關卡頁（v2 P1 的課本首頁，P4 起改名「關卡」、分成三個類別）。
  *
  * 純呈現：哪一關是什麼狀態、「接著上次」指去哪，都由 App.tsx 算好傳進來。
  * 任何一列都可以點 —— 不鎖關卡是已定案的原則；還沒做好的關卡點了給說明。
@@ -43,7 +43,6 @@ export default function TextbookHome({
   statusOf,
   resume,
   onOpenLevel,
-  onOpenSandbox,
 }: {
   units: Unit[];
   levels: Record<string, Level>;
@@ -51,8 +50,6 @@ export default function TextbookHome({
   /** 最上方那顆大按鈕。沒有可以接的課就是 null。 */
   resume: { label: string; levelId: string } | null;
   onOpenLevel: (level: Level) => void;
-  /** 只有開發者才會給。給了，最上方就多一個「我的沙盒」區塊。 */
-  onOpenSandbox?: () => void;
 }) {
   const [soonLevel, setSoonLevel] = useState<Level | null>(null);
 
@@ -64,29 +61,19 @@ export default function TextbookHome({
   return (
     <View style={s.wrap}>
       <GroupedList>
-        <NavHeader title="課本" />
+        <NavHeader title="關卡" />
 
-        {onOpenSandbox ? (
-          <Section header="我的沙盒" footer="只有你的帳號看得到。">
-            <ListRow
-              icon={<LevelIcon glyph="chat" />}
-              title="LINE 自由操作"
-              subtitle="沒有題目，什麼都可以按"
-              onPress={onOpenSandbox}
-            />
-          </Section>
-        ) : null}
 
         {resume ? (
           <PrimaryButton
             label={resume.label}
             onPress={() => open(levels[resume.levelId])}
-            style={{ marginTop: onOpenSandbox ? 20 : 8 }}
+            style={{ marginTop: 8 }}
           />
         ) : null}
 
-        {units.map((unit, i) => (
-          <Section key={unit.id} header={`單元${'一二三四五六七八九'[i] ?? i + 1}　${unit.title}`} footer={unit.summary}>
+        {units.map((unit) => (
+          <Section key={unit.id} header={unit.title} footer={unit.summary}>
             {unit.levelIds.map((id) => {
               const level = levels[id];
               return (

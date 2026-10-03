@@ -15,19 +15,20 @@ import type { LineUser } from '../auth/lineAuth';
 const UNBUILT = '這個功能還沒做好。';
 
 /**
- * 「我的沙盒」：只有開發者看得到（見 src/auth/devAccess.ts）。
+ * LINE 模擬器（從「模擬器」分頁推進來，整個畫面就是 LINE，沒有我們的底部分頁）。
  *
- * 一個完整、沒有題目的 LINE 模擬器，用來自己測試、對照真機驗收。
- * 沒有紅圈、沒有引導條、沒有卡住了、沒有過關判定，也不寫進度。
- * 畫面上沒有任何教學外殼（2026-10-04 使用者決定拿掉頂部的「沙盒模式」那一行），
- * 整個畫面就是綠色的模擬層。離開沙盒：LINE 的 Home 分頁裡那顆按鈕（在沙盒裡寫「離開沙盒」）。
+ * 一個完整、沒有題目的 LINE：聊天列表、五個分頁、聊天室、貼圖、語音、照片、打電話都能用。
+ * 沒有紅圈、沒有引導條、沒有卡住了、沒有過關判定，也不計分、不寫進度。
+ *
+ * 離開：LINE Home 分頁裡那顆按鈕（寫「離開 LINE 模擬器」），或手機／瀏覽器的上一頁（App.tsx 處理）。
+ * 2026-10-04 起開放給所有人，取代 P2 只有開發者看得到的「我的沙盒」。
  */
-export default function SandboxScreen({ user, onExit }: { user: LineUser | null; onExit: () => void }) {
+export default function LineSimulatorScreen({ user, onExit }: { user: LineUser | null; onExit: () => void }) {
   const { base } = useScale();
   const [tab, setTab] = useState<TabKey>('chats');
   const [roomId, setRoomId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  /** 沙盒裡打過的電話紀錄，依聊天室分開存（只在這次打開沙盒期間）。 */
+  /** 打過的電話紀錄，依聊天室分開存（只在這次打開模擬器期間）。 */
   const [extras, setExtras] = useState<Record<string, ThreadItem[]>>({});
   const [call, setCall] = useState<{ mic: Promise<MicHandle | null> } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -110,13 +111,13 @@ export default function SandboxScreen({ user, onExit }: { user: LineUser | null;
                 />
               ) : null}
               {tab === 'home' && user ? (
-                <HomeProfileScreen user={user} base={base} actionLabel="離開沙盒" onLogout={onExit} />
+                <HomeProfileScreen user={user} base={base} actionLabel="離開 LINE 模擬器" onLogout={onExit} />
               ) : null}
             </View>
             <BottomTabBar
               active={tab}
               base={base}
-              // 沒有身分（原生端）就沒有 Home 畫面可以放離開鍵，直接離開沙盒。
+              // 沒有身分（原生端）就沒有 Home 畫面可以放離開鍵，直接離開模擬器。
               onPressHome={() => (user ? setTab('home') : onExit())}
               onPressChats={() => setTab('chats')}
               onPressDiscover={() => show(UNBUILT)}

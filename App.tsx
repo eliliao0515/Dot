@@ -3,12 +3,14 @@ import { View, SafeAreaView, StatusBar, Platform, StyleSheet } from 'react-nativ
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { ScaleProvider, T, useScale } from './src/ui/Scale';
 import { C, fz } from './src/ui/theme';
-import { Person } from './src/ui/Icons';
+import { Person, PhoneOutline } from './src/ui/Icons';
 import { LESSONS } from './src/content/lessons';
 import { UNITS, LEVELS, RECOMMENDED_ORDER } from './src/content/curriculum';
 import type { Level } from './src/engine/types';
 import ScenarioRunner from './src/shell/ScenarioRunner';
-import SandboxScreen from './src/shell/SandboxScreen';
+import LineSimulatorScreen from './src/shell/LineSimulatorScreen';
+import SimulatorsScreen from './src/shell/SimulatorsScreen';
+import { useHistoryBack } from './src/ui/useHistoryBack';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
 import LoginGate from './src/shell/LoginGate';
@@ -20,7 +22,7 @@ import { H } from './src/ui/hig/tokens';
 import KeyboardViewport from './src/ui/KeyboardViewport';
 import type { RowStatus } from './src/ui/hig/ListRow';
 import { initLineAuth, requestLineLogin, logout, type LineUser } from './src/auth/lineAuth';
-import { isDeveloper, sha256Hex } from './src/auth/devAccess';
+import { sha256Hex } from './src/auth/devAccess';
 import {
   loadProgress,
   recordStageDone,
@@ -32,18 +34,19 @@ import {
 } from './src/storage/progress';
 
 /**
- * 分頁架構：activeTab 是底部兩個分頁（課本、我）裡目前選中的那個，
+ * 分頁架構：activeTab 是底部三個分頁（關卡、模擬器、我）裡目前選中的那個，
  * stack 是疊在分頁之上的全螢幕內容（課程/綜合練習）——疊上去的時候
  * 整條分頁列連同分頁內容都先不顯示，退出（stack 設回 null）才回到原本選中的分頁。
  */
-type TabKey = 'textbook' | 'me';
+type TabKey = 'levels' | 'simulators' | 'me';
 
 type StackRoute =
   | { name: 'sim'; lessonId: string; stageIndex: number }
   | { name: 'realDevice'; lessonId: string }
   | { name: 'done'; lessonId: string }
   | { name: 'practice' }
-  | { name: 'sandbox' };
+  /** 從「模擬器」分頁推進來的 LINE 模擬器，整個畫面就是 LINE。 */
+  | { name: 'lineSim' };
 
 /**
  * 一關的狀態。scenario 關卡沿用 v1 的 nodeStateFor 判斷（關卡 id 等於 lessonId，
@@ -69,7 +72,9 @@ function levelStatus(progress: Progress, level: Level): RowStatus {
  * 只決定按鈕指向，不擋任何關卡。
  */
 function resumeTarget(progress: Progress): { label: string; levelId: string } | null {
-  const last = progress.lastLessonId ? LEVELS[progress.lastLessonId] : undefined;
+  // 只考慮關卡頁上實際列出來的關卡；暫時隱藏的舊課不要被「接著上次」指過去。
+  const last =
+    progress.lastLessonId && RECOMMENDED_ORDER.includes(progress.lastLessonId) ? LEVELS[progress.lastLessonId] : undefined;
   if (last && levelStatus(progress, last) === 'partial') {
     return { label: `接著上次：${last.title}`, levelId: last.id };
   }
@@ -125,11 +130,10 @@ function DebugBadge({ user }: { user: LineUser | null }) {
 
 function Root() {
   const { base } = useScale();
-  const [activeTab, setActiveTab] = useState<TabKey>('textbook');
+  const [activeTab, setActiveTab] = useState<TabKey>('levels');
   const [stack, setStack] = useState<StackRoute | null>(null);
   const [lineUser, setLineUser] = useState<LineUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [isDev, setIsDev] = useState(false);
   const [progress, setProgress] = useState<Progress>(EMPTY_PROGRESS);
 
   // 身分是加分項：拿不到就匿名繼續，畫面不等它 —— 這在原生端仍然成立。
@@ -143,9 +147,6 @@ function Root() {
       const user = liffUser ?? devLoginUser();
       setLineUser(user);
       setAuthChecked(true);
-      isDeveloper(user).then((dev) => {
-        if (alive) setIsDev(dev);
-      });
       loadProgress().then((p) => {
         if (alive) setProgress(p);
       });
@@ -157,6 +158,9 @@ function Root() {
   const lesson = stack && 'lessonId' in stack ? LESSONS[stack.lessonId] : undefined;
   // 只在網頁端強制登入 —— 原生端還沒有真正的 LIFF 串接，硬擋只會讓原生版整個開不了機。
   const showGate = Platform.OS === 'web' && authChecked && lineUser === null;
+
+  // 全螢幕的畫面（課程、LINE 模擬器）打開時，按手機或瀏覽器的上一頁就回到原本的分頁。
+  useHistoryBack(stack !== null, () => setStack(null));
 
   function advance() {
     if (!stack || stack.name !== 'sim' || !lesson) return;
@@ -221,21 +225,22 @@ function Root() {
 
           {stack.name === 'practice' ? <PracticeSession onExit={() => setStack(null)} /> : null}
 
-          {stack.name === 'sandbox' ? <SandboxScreen user={lineUser} onExit={() => setStack(null)} /> : null}
+          {stack.name === 'lineSim' ? <LineSimulatorScreen user={lineUser} onExit={() => setStack(null)} /> : null}
         </>
       ) : (
         <View style={{ flex: 1, backgroundColor: H.bg }}>
           <View style={{ flex: 1 }}>
-            {activeTab === 'textbook' ? (
+            {activeTab === 'levels' ? (
               <TextbookHome
                 units={UNITS}
                 levels={LEVELS}
                 statusOf={(level) => levelStatus(progress, level)}
                 resume={resumeTarget(progress)}
                 onOpenLevel={openLevel}
-                onOpenSandbox={isDev ? () => setStack({ name: 'sandbox' }) : undefined}
               />
             ) : null}
+
+            {activeTab === 'simulators' ? <SimulatorsScreen onOpenLine={() => setStack({ name: 'lineSim' })} /> : null}
 
             {activeTab === 'me' ? (
               <MeScreen
@@ -243,8 +248,7 @@ function Root() {
                 onLogout={() => {
                   logout();
                   setLineUser(null);
-                  setIsDev(false);
-                  setActiveTab('textbook');
+                  setActiveTab('levels');
                 }}
               />
             ) : null}
@@ -252,7 +256,12 @@ function Root() {
 
           <TabBar<TabKey>
             tabs={[
-              { key: 'textbook', label: '課本', icon: (color) => <Book size={fz(base, 1.6)} color={color} /> },
+              { key: 'levels', label: '關卡', icon: (color) => <Book size={fz(base, 1.6)} color={color} /> },
+              {
+                key: 'simulators',
+                label: '模擬器',
+                icon: (color) => <PhoneOutline size={fz(base, 1.6)} color={color} weight={2.2} />,
+              },
               { key: 'me', label: '我', icon: (color) => <Person size={fz(base, 1.6)} color={color} weight={2.2} /> },
             ]}
             active={activeTab}

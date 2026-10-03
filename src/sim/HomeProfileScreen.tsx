@@ -24,7 +24,7 @@ export default function HomeProfileScreen({
   user: LineUser;
   base: number;
   onLogout: () => void;
-  /** 底部按鈕的字。沙盒裡借這顆按鈕當作「離開沙盒」。 */
+  /** 底部按鈕的字。LINE 模擬器裡借這顆按鈕當作「離開 LINE 模擬器」。 */
   actionLabel?: string;
 }) {
   const [imgFailed, setImgFailed] = useState(false);

@@ -18,6 +18,10 @@ function soon(id: string, title: string, glyph: Level['glyph']): Level {
 }
 
 const LEVEL_LIST: Level[] = [
+  // v2 P4：目前關卡頁實際列出的
+  soon('sym-quiz', '符號選擇題', 'search'),
+  soon('ges-basic', '基本手勢', 'touch'),
+
   // 單元一　認識符號
   soon('sym-back', '往回走、回首頁', 'back'),
   soon('sym-search', '找東西', 'search'),
@@ -48,24 +52,29 @@ const LEVEL_LIST: Level[] = [
 
 export const LEVELS: Record<string, Level> = Object.fromEntries(LEVEL_LIST.map((l) => [l.id, l]));
 
+/**
+ * 關卡頁的三個類別（specs/v2/P4-restructure-quiz-points.md §2，2026-10-04 使用者決定先各做一關）。
+ * 其他已經做好的 LINE 課（回訊息、貼圖、語音訊息、存照片）和綜合練習先不列出來，
+ * 資料留在 LEVELS 裡，之後要放回哪個類別再決定。
+ */
 export const UNITS: Unit[] = [
   {
     id: 'symbols',
     title: '認識符號',
     summary: '手機上的小圖案各代表什麼意思。',
-    levelIds: ['sym-back', 'sym-search', 'sym-more', 'sym-talk', 'sym-share', 'sym-settings', 'sym-careful'],
+    levelIds: ['sym-quiz'],
   },
   {
     id: 'gestures',
-    title: '手勢',
-    summary: '用手指按、壓、滑，每一種手勢練一關。',
-    levelIds: ['ges-tap', 'ges-long-press', 'ges-scroll', 'ges-swipe', 'ges-drag', 'ges-double-tap', 'ges-pinch'],
+    title: '練習手勢',
+    summary: '用手指按、壓、滑，每一種手勢練一練。',
+    levelIds: ['ges-basic'],
   },
   {
-    id: 'line',
-    title: 'LINE 情境',
-    summary: '把學過的符號和手勢，用在 LINE 裡真的會遇到的事情上。',
-    levelIds: ['read-reply', 'sticker', 'voice-msg', 'save-photo', 'voice-call', 'video-call', 'line-practice'],
+    id: 'scenarios',
+    title: '情境挑戰',
+    summary: '把學過的東西，用在 LINE 裡真的會遇到的事情上。',
+    levelIds: ['voice-call'],
   },
 ];
 
