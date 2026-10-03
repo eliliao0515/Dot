@@ -3,7 +3,7 @@ import { View, Pressable, StyleSheet, Platform, TextInput, Image } from 'react-n
 import { T } from '../ui/Scale';
 import { C, fz, textBase } from '../ui/theme';
 import {
-  Back, Mic, MicOutline, Plus, Play, Pause, VideoCam, Menu, Smile, Send,
+  Back, Mic, MicOutline, Plus, Play, Pause, Menu, Smile, Send, Search, Calendar, PhoneHandset, VideoCamFilled,
   ThumbsUp, Heart, Laugh, Ok, Flower, Camera, Album, Person,
 } from '../ui/Icons';
 import { Bubble, StickerId } from '../engine/types';
@@ -45,28 +45,97 @@ function formatDuration(totalSeconds: number): string {
 
 const SAMPLE_CONTACTS = ['陳醫師', '里長', '大兒子', '孫子小宇'];
 
-export function SimTopBar({ contact, base, onWrongTap, onPressBack, onPressVideo }: {
+/**
+ * 聊天室頂部列的尺寸。右邊四顆照使用者提供的真 LINE 截圖排：搜尋、電話、記事本、選單，
+ * 中心間距約 39pt（以 390pt 寬、標準字級為基準），全部跟著 base 等比例縮放。
+ * 教學疊層的紅圈也從這裡算位置。
+ */
+export function topBarMetrics(base: number) {
+  const k = base / 16;
+  const m = { height: 48 * k, padL: 12 * k, padR: 16 * k, iconSlot: 22 * k, gap: 17 * k, icon: 21 * k, stroke: 1.8 * k };
+  /** 第 i 顆（從右邊數，0 = 選單）中心到畫面右緣的距離。 */
+  const centerFromRight = (i: number) => m.padR + m.iconSlot / 2 + i * (m.iconSlot + m.gap);
+  return { ...m, centerFromRight, phoneCenterFromRight: centerFromRight(2) };
+}
+
+export function SimTopBar({
+  contact,
+  base,
+  onWrongTap,
+  onPressBack,
+  onPressPhone,
+  onPressUnbuilt,
+  phoneActive = false,
+}: {
   contact: string;
   base: number;
+  /** 選單鍵（以及沒給 onPressBack 時的返回鍵）。 */
   onWrongTap: () => void;
   /** 給了就是真的返回；沒給就跟選單鍵一樣當作按錯。 */
   onPressBack?: () => void;
-  onPressVideo: () => void;
+  onPressPhone: () => void;
+  /** 搜尋、記事本這些模擬器還沒做的按鈕。 */
+  onPressUnbuilt: () => void;
+  phoneActive?: boolean;
 }) {
+  const m = topBarMetrics(base);
+  const slot = { width: m.iconSlot, height: m.iconSlot, alignItems: 'center' as const, justifyContent: 'center' as const };
   return (
-    <View style={s.topBar}>
-      <Pressable onPress={onPressBack ?? onWrongTap} hitSlop={8}>
+    <View style={[s.topBar, { height: m.height, paddingLeft: m.padL, paddingRight: m.padR }]}>
+      <Pressable onPress={onPressBack ?? onWrongTap} hitSlop={10} accessibilityLabel="返回">
         <Back size={fz(base, 1.5)} />
       </Pressable>
-      <T style={[s.contact, { fontSize: fz(base, 1), lineHeight: fz(base, 1.4) }]}>{contact}</T>
-      <View style={s.topIcons}>
-        <Pressable onPress={onPressVideo} hitSlop={10}>
-          <VideoCam size={fz(base, 1.25)} />
+      <T style={[s.contact, { fontSize: fz(base, 1.05), lineHeight: fz(base, 1.45) }]} numberOfLines={1}>
+        {contact}
+      </T>
+      <View style={[s.topIcons, { gap: m.gap }]}>
+        <Pressable onPress={onPressUnbuilt} hitSlop={8} style={slot} accessibilityLabel="搜尋">
+          <Search size={m.icon} color={BAR_ICON} weight={m.stroke} />
         </Pressable>
-        <Pressable onPress={onWrongTap} hitSlop={10}>
-          <Menu size={fz(base, 1.05)} />
+        <Pressable onPress={onPressPhone} hitSlop={8} style={slot} accessibilityLabel="電話">
+          <PhoneHandset size={m.icon * 1.05} color={phoneActive ? C.chatGreen : BAR_ICON} weight={m.stroke} />
+        </Pressable>
+        <Pressable onPress={onPressUnbuilt} hitSlop={8} style={slot} accessibilityLabel="記事本">
+          <Calendar size={m.icon} color={BAR_ICON} weight={m.stroke} />
+        </Pressable>
+        <Pressable onPress={onWrongTap} hitSlop={8} style={slot} accessibilityLabel="選單">
+          <Menu size={m.icon * 0.95} color={BAR_ICON} weight={m.stroke} />
         </Pressable>
       </View>
+    </View>
+  );
+}
+
+/**
+ * 按頂部電話後，從頂部列下面展開的選單：左邊「語音通話」、右邊「視訊通話」。
+ * 版面是使用者描述的方向，還沒對照真機截圖（2026-10-04），之後要照真機修。
+ */
+export function callMenuMetrics(base: number) {
+  const k = base / 16;
+  return { padV: 14 * k, itemW: 96 * k, itemH: 64 * k, gap: 28 * k, icon: 28 * k };
+}
+
+export function CallMenu({
+  base,
+  onPickVoice,
+  onPickVideo,
+}: {
+  base: number;
+  onPickVoice: () => void;
+  onPickVideo: () => void;
+}) {
+  const m = callMenuMetrics(base);
+  const item = { width: m.itemW, height: m.itemH, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 6 * (base / 16) };
+  return (
+    <View style={[s.callMenu, { paddingVertical: m.padV, gap: m.gap }]}>
+      <Pressable onPress={onPickVoice} style={item} accessibilityRole="button" accessibilityLabel="語音通話">
+        <PhoneHandset size={m.icon} color={BAR_ICON} weight={1.8 * (base / 16)} />
+        <T style={[s.callMenuLabel, { fontSize: fz(base, 0.82), lineHeight: fz(base, 1.15) }]}>語音通話</T>
+      </Pressable>
+      <Pressable onPress={onPickVideo} style={item} accessibilityRole="button" accessibilityLabel="視訊通話">
+        <VideoCamFilled size={m.icon} color={BAR_ICON} />
+        <T style={[s.callMenuLabel, { fontSize: fz(base, 0.82), lineHeight: fz(base, 1.15) }]}>視訊通話</T>
+      </Pressable>
     </View>
   );
 }
@@ -157,6 +226,18 @@ export function MessageRow({
           base={base}
           onPress={() => onOpenPhoto?.(msg.label, msg.uri)}
         />
+      ) : msg.kind === 'call' ? (
+        <View style={[s.bubble, s.callBubble, mine && s.bubbleMine]}>
+          <PhoneHandset size={fz(base, 1.2)} color={mine ? C.chatGreenInk : C.ink} weight={1.8} />
+          <View>
+            <T style={[s.contactName, { fontSize: fz(base, 0.92), lineHeight: fz(base, 1.35) }, mine && { color: C.chatGreenInk }]}>
+              語音通話
+            </T>
+            <T style={[s.contactCaption, { fontSize: fz(base, 0.75), lineHeight: fz(base, 1.15) }, mine && { color: C.chatGreenInk }]}>
+              {msg.canceled ? '已取消' : `通話時間 ${formatDuration(msg.seconds)}`}
+            </T>
+          </View>
+        </View>
       ) : msg.kind === 'contact' ? (
         <View style={[s.bubble, s.contactBubble, mine && s.bubbleMine]}>
           <View style={[s.avatar, { backgroundColor: colorFromString(msg.name, TINT_PALETTE) }]}>
@@ -472,14 +553,24 @@ const s = StyleSheet.create({
     backgroundColor: C.chatBar,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: C.chatLine,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  contact: { fontWeight: '700', color: C.ink },
-  topIcons: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 16 },
+  contact: { fontWeight: '700', color: C.ink, flex: 1, marginLeft: 8 },
+  callMenu: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: C.chatLine,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  callMenuLabel: { color: C.ink, fontWeight: '500' },
+  callBubble: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  topIcons: { flexDirection: 'row', alignItems: 'center' },
 
   row: { maxWidth: '78%', alignSelf: 'flex-start', gap: 4 },
   rowMine: { alignSelf: 'flex-end' },

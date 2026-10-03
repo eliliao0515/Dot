@@ -54,7 +54,7 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       messages: [
         { id: 'pq-4-m1', from: 'them', kind: 'text', text: '阿姨我們在頂樓種的花開了，要不要視訊給你看？', showName: true },
       ],
-      note: '想跟對方視訊，點畫面上面的攝影機圖示看看。',
+      note: '想跟對方視訊，點畫面右上角的電話，選「視訊通話」。',
     },
     target: { node: 'video', gesture: 'tap', minMs: 0 },
   },
@@ -67,7 +67,7 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       messages: [
         { id: 'pq-5-m1', from: 'them', kind: 'text', text: '媽，我到高雄了，開視訊給你看飯店房間', showName: true },
       ],
-      note: '想跟對方視訊，點畫面上面的攝影機圖示看看。',
+      note: '想跟對方視訊，點畫面右上角的電話，選「視訊通話」。',
     },
     target: { node: 'video', gesture: 'tap', minMs: 0 },
   },
@@ -93,7 +93,7 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
       messages: [
         { id: 'pq-7-m1', from: 'them', kind: 'text', text: '阿嬤你看我畫的圖，我們視訊你才看得清楚', showName: true },
       ],
-      note: '想跟對方視訊，點畫面上面的攝影機圖示看看。',
+      note: '想跟對方視訊，點畫面右上角的電話，選「視訊通話」。',
     },
     target: { node: 'video', gesture: 'tap', minMs: 0 },
   },

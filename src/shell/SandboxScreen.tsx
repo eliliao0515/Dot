@@ -6,7 +6,10 @@ import { SANDBOX_ROOMS } from '../content/sandbox';
 import ChatsListScreen from '../sim/ChatsListScreen';
 import HomeProfileScreen from '../sim/HomeProfileScreen';
 import { BottomTabBar, type TabKey } from '../sim/BottomTabBar';
-import LineChatScreen, { type LineAction } from '../sim/LineChatScreen';
+import LineChatScreen, { type LineAction, type ThreadItem } from '../sim/LineChatScreen';
+import CallSession, { type CallResult } from './CallSession';
+import { primeCallAudio, type MicHandle } from './callAudio';
+import { freeCall } from '../content/calls';
 import type { LineUser } from '../auth/lineAuth';
 
 const UNBUILT = '這個功能還沒做好。';
@@ -24,6 +27,9 @@ export default function SandboxScreen({ user, onExit }: { user: LineUser | null;
   const [tab, setTab] = useState<TabKey>('chats');
   const [roomId, setRoomId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  /** 沙盒裡打過的電話紀錄，依聊天室分開存（只在這次打開沙盒期間）。 */
+  const [extras, setExtras] = useState<Record<string, ThreadItem[]>>({});
+  const [call, setCall] = useState<{ mic: Promise<MicHandle | null> } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -40,7 +46,12 @@ export default function SandboxScreen({ user, onExit }: { user: LineUser | null;
 
   function handleAction(action: LineAction) {
     switch (action.type) {
-      case 'pressVideo':
+      case 'pickVoiceCall':
+        // 必須在點擊當下啟動聲音和麥克風，iPhone 才會放行。
+        setToast(null);
+        setCall({ mic: primeCallAudio() });
+        break;
+      case 'pickVideoCall':
       case 'wrongTap':
       case 'unbuilt':
         show(UNBUILT);
@@ -54,6 +65,16 @@ export default function SandboxScreen({ user, onExit }: { user: LineUser | null;
 
   const room = roomId ? SANDBOX_ROOMS.find((r) => r.id === roomId) : undefined;
 
+  function handleCallEnd(result: CallResult) {
+    setCall(null);
+    if (!room) return;
+    const item: ThreadItem = {
+      bubble: { id: `call-${Date.now()}`, from: 'me', kind: 'call', seconds: result.seconds, canceled: !result.connected },
+      contact: room.contactName,
+    };
+    setExtras((prev) => ({ ...prev, [room.id]: [...(prev[room.id] ?? []), item] }));
+  }
+
   return (
     <View style={s.wrap}>
       <View style={{ flex: 1 }}>
@@ -61,7 +82,10 @@ export default function SandboxScreen({ user, onExit }: { user: LineUser | null;
           <LineChatScreen
             key={room.id}
             contact={room.contactName}
-            incoming={room.messages.map((bubble) => ({ bubble, contact: room.contactName }))}
+            incoming={[
+              ...room.messages.map((bubble) => ({ bubble, contact: room.contactName })),
+              ...(extras[room.id] ?? []),
+            ]}
             onAction={handleAction}
             onPressBack={() => setRoomId(null)}
           />
@@ -101,6 +125,10 @@ export default function SandboxScreen({ user, onExit }: { user: LineUser | null;
             />
           </>
         )}
+
+        {room && call ? (
+          <CallSession contact={room.contactName} script={freeCall} mic={call.mic} hints={false} onEnd={handleCallEnd} />
+        ) : null}
 
         {toast ? (
           <View style={s.toast} pointerEvents="none">

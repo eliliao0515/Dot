@@ -1,3 +1,4 @@
+import { guidedCall, soloCall, transferCall } from './calls';
 import { Lesson, MapNode, ChatRoomPreview } from '../engine/types';
 
 /**
@@ -201,7 +202,60 @@ export const readReplyLesson: Lesson = {
   },
 };
 
+/**
+ * 打語音電話（測試版，2026-10-04）。通話畫面是自己做的版本、台詞是測試用，使用者會大改。
+ * 撥號路徑「右上角電話 → 語音通話」是使用者描述的，還沒對照真機截圖。
+ */
+export const voiceCallLesson: Lesson = {
+  id: 'voice-call',
+  eyebrow: '打語音電話',
+  title: '淑芬請你打電話給她',
+  why: '想聽聽家人的聲音，用 LINE 打電話，不用花電話費。',
+  skillName: '打 LINE 語音電話',
+  target: { node: 'call', gesture: 'tap', minMs: 0 },
+  stages: [
+    {
+      stage: 'guided',
+      contact: '淑芬',
+      messages: [{ id: 'g1', from: 'them', kind: 'text', text: '媽，你有空打給我一下嗎？', showName: true }],
+      coach: '點右上角的電話，選「語音通話」打給她。',
+      note: '按錯不會怎麼樣，慢慢來。',
+      call: guidedCall,
+    },
+    {
+      stage: 'solo',
+      contact: '淑芬',
+      messages: [{ id: 's1', from: 'them', kind: 'text', text: '媽，剛剛斷掉了，再打給我一次', showName: true }],
+      note: '這一次沒有提示。想不起來就按「卡住了」。',
+      call: soloCall,
+    },
+    {
+      stage: 'transfer',
+      contact: '阿弟',
+      messages: [{ id: 't1', from: 'them', kind: 'text', text: '阿母，有閒打電話給我', showName: true }],
+      note: '換一個人。打電話給他。',
+      call: transferCall,
+    },
+  ],
+  realDevice: {
+    headline: '現在，換你自己的手機',
+    steps: [
+      '先跟家人約好時間，請他記得接電話',
+      '打開你自己的 LINE，找到他的聊天室',
+      '點右上角的電話，選「語音通話」',
+      '講幾句話，講完按紅色的鍵掛斷',
+      '打完了就回來這裡',
+    ],
+  },
+  done: {
+    headline: '你會打 LINE 電話了',
+    body: '以後想打給家人，點聊天室右上角的電話，選「語音通話」就好。',
+    shareWith: '淑芬',
+  },
+};
+
 export const LESSONS: Record<string, Lesson> = {
+  [voiceCallLesson.id]: voiceCallLesson,
   [voiceMessageLesson.id]: voiceMessageLesson,
   [stickerLesson.id]: stickerLesson,
   [savePhotoLesson.id]: savePhotoLesson,

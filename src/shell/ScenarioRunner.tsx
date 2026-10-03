@@ -5,7 +5,10 @@ import { C, fz } from '../ui/theme';
 import { Speaker } from '../ui/Icons';
 import type { Lesson, StageScript } from '../engine/types';
 import LineChatScreen, { type LineAction, type ThreadItem } from '../sim/LineChatScreen';
-import { inputBarMetrics } from '../sim/parts';
+import { inputBarMetrics, topBarMetrics, callMenuMetrics } from '../sim/parts';
+import CallSession, { type CallResult } from './CallSession';
+import { primeCallAudio, type MicHandle } from './callAudio';
+import { freeCall } from '../content/calls';
 
 /**
  * LINE 情境關卡的教學疊層。疊在純 LINE 畫面（LineChatScreen）之上，
@@ -14,22 +17,25 @@ import { inputBarMetrics } from '../sim/parts';
  * guided 提示全開，solo 要自己按「卡住了」，transfer 完全沒有提示。
  *
  * 會過關的動作是五條並行路徑，同一時刻只有 lesson.target.node 指定的那一條算數：
- * 送出語音（'mic'）、點頂部視訊圖示（'video'）、送出貼圖（'sticker'）、
- * 在看照片裡點下載（'photo'）、在輸入框打字送出（'reply'）。
+ * 送出語音（'mic'）、電話選單選「視訊通話」（'video'）、送出貼圖（'sticker'）、
+ * 在看照片裡點下載（'photo'）、在輸入框打字送出（'reply'）、
+ * 打語音電話照劇本講完、最後自己掛斷（'call'，由 CallSession 判斷）。
  * 其他課裡打字送出、傳照片、傳聯絡人都不算 —— 不讓長輩用別的方法繞過這一課真正要練的動作。
  */
 
 const PASS_ACTION: Record<Lesson['target']['node'], LineAction['type'] | null> = {
   mic: 'sendVoice',
-  video: 'pressVideo',
+  video: 'pickVideoCall',
   sticker: 'sendSticker',
   photo: 'savePhoto',
   reply: 'sendText',
   plus: null,
+  call: null,
 };
 
 const SUCCESS_TEXT: Partial<Record<Lesson['target']['node'], string>> = {
-  video: '接通了',
+  video: '撥出去了',
+  call: '電話打完了',
   sticker: '貼圖傳出去了',
   photo: '存起來了',
 };
@@ -116,6 +122,45 @@ function GuideRing({ base, node }: { base: number; node: 'mic' | 'sticker' | 're
   );
 }
 
+/**
+ * 打電話課帶著做的紅圈：還沒打開電話選單時圈頂部的電話，打開後圈「語音通話」。
+ * 位置跟 LINE 頂部列、電話選單用同一組尺寸（sim/parts.tsx）。
+ */
+function DialRing({ base, menuOpen }: { base: number; menuOpen: boolean }) {
+  const top = topBarMetrics(base);
+  if (!menuOpen) {
+    const size = top.iconSlot + 18;
+    return (
+      <View
+        pointerEvents="none"
+        style={[
+          st.ring,
+          { zIndex: 30, width: size, height: size, borderRadius: size / 2, top: top.height / 2 - size / 2, right: top.phoneCenterFromRight - size / 2 },
+        ]}
+      />
+    );
+  }
+  const menu = callMenuMetrics(base);
+  const pad = 6;
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        st.ring,
+        {
+          zIndex: 30,
+          top: top.height + menu.padV - pad,
+          left: '50%',
+          marginLeft: -(menu.gap / 2 + menu.itemW) - pad,
+          width: menu.itemW + pad * 2,
+          height: menu.itemH + pad * 2,
+          borderRadius: 16,
+        },
+      ]}
+    />
+  );
+}
+
 export default function ScenarioRunner({
   lesson,
   script,
@@ -134,6 +179,9 @@ export default function ScenarioRunner({
   const [askedForHelp, setAskedForHelp] = useState(false);
   const [nudge, setNudge] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
+  const [callMenuOpen, setCallMenuOpen] = useState(false);
+  /** 通話中：點「語音通話」那一刻要到的麥克風（可能是 null）。 */
+  const [call, setCall] = useState<{ mic: Promise<MicHandle | null> } | null>(null);
 
   // 整段對話是連續的一條串：換一關就把這一關的開場訊息接上去，不是換掉。
   useEffect(() => {
@@ -142,6 +190,8 @@ export default function ScenarioRunner({
     setAskedForHelp(false);
     setNudge(null);
     setSucceeded(false);
+    setCallMenuOpen(false);
+    setCall(null);
   }, [script.stage]);
 
   const showCoach = script.stage === 'guided' || askedForHelp;
@@ -158,14 +208,27 @@ export default function ScenarioRunner({
    */
   function handleAction(action: LineAction) {
     if (succeeded) return;
-    if (action.type === PASS_ACTION[target.node] && (action.type !== 'pressVideo' || target.gesture === 'tap')) {
+    if (action.type === PASS_ACTION[target.node]) {
       pass();
       return;
     }
     switch (action.type) {
       case 'wrongTap':
-      case 'pressVideo':
         setWrongTaps((n) => n + 1);
+        break;
+      case 'openCallMenu':
+        setCallMenuOpen(true);
+        break;
+      case 'closeCallMenu':
+        setCallMenuOpen(false);
+        break;
+      case 'pickVoiceCall':
+        // 必須在點擊當下啟動聲音和麥克風，iPhone 才會放行。
+        setNudge(null);
+        setCall({ mic: primeCallAudio() });
+        break;
+      case 'pickVideoCall':
+        setNudge('視訊通話還沒做好。');
         break;
       case 'unbuilt':
         setNudge('這個功能還沒做好。');
@@ -176,7 +239,27 @@ export default function ScenarioRunner({
     }
   }
 
+  /**
+   * 掛斷之後：聊天室多一則通話紀錄。打電話課照劇本講完就過關；
+   * 提早掛斷不是錯，只是溫和地請他再打一次。
+   */
+  function handleCallEnd(result: CallResult) {
+    setCall(null);
+    setIncoming((prev) => [
+      ...prev,
+      {
+        bubble: { id: `call-${Date.now()}`, from: 'me', kind: 'call', seconds: result.seconds, canceled: !result.connected },
+        contact: script.contact,
+      },
+    ]);
+    if (target.node !== 'call' || succeeded) return;
+    if (result.completed) pass();
+    else setNudge('沒關係，可以再打一次。點右上角的電話。');
+  }
+
   const helpIsBig = wrongTaps >= 2 && !askedForHelp;
+  const callScript = target.node === 'call' && script.call ? script.call : freeCall;
+  const dialCoach = callMenuOpen ? '選左邊的「語音通話」。' : lesson.stages[0].coach;
 
   return (
     <LineChatScreen
@@ -206,7 +289,7 @@ export default function ScenarioRunner({
             <Speaker size={fz(base, 1.3)} />
             <View style={st.coachBody}>
               <T style={[st.coachText, { fontSize: fz(base, 1.02), lineHeight: fz(base, 1.55) }]}>
-                {lesson.stages[0].coach}
+                {target.node === 'call' ? dialCoach : lesson.stages[0].coach}
               </T>
               <T style={[st.coachReplay, { fontSize: fz(base, 0.8), lineHeight: fz(base, 1.3) }]}>再念一次</T>
             </View>
@@ -218,8 +301,10 @@ export default function ScenarioRunner({
         )
       }
       chatOverlay={
-        showCoach && !succeeded && (target.node === 'mic' || target.node === 'sticker' || target.node === 'reply') ? (
+        showCoach && !succeeded && !call && (target.node === 'mic' || target.node === 'sticker' || target.node === 'reply') ? (
           <GuideRing base={base} node={target.node} />
+        ) : showCoach && !succeeded && !call && target.node === 'call' ? (
+          <DialRing base={base} menuOpen={callMenuOpen} />
         ) : null
       }
       screenOverlay={
@@ -232,7 +317,16 @@ export default function ScenarioRunner({
         ) : null
       }
       topOverlay={
-        nudge && !succeeded ? (
+        call ? (
+          <CallSession
+            contact={script.contact}
+            script={callScript}
+            mic={call.mic}
+            hints={target.node === 'call' && showCoach}
+            onAskHelp={target.node === 'call' && script.stage !== 'guided' ? () => setAskedForHelp(true) : undefined}
+            onEnd={handleCallEnd}
+          />
+        ) : nudge && !succeeded ? (
           <View style={st.nudge} pointerEvents="none">
             <T style={[st.nudgeText, { fontSize: fz(base, 0.92), lineHeight: fz(base, 1.5) }]}>{nudge}</T>
           </View>

@@ -7,7 +7,7 @@ import { PrimaryButton } from '../ui/hig/Buttons';
 import Sheet from '../ui/hig/Sheet';
 import { TouchDot } from '../ui/hig/glyphs';
 import { H } from '../ui/hig/tokens';
-import { Back, Camera, ChatsTab, Menu, Mic, Plus, Search, ShareUp, Smile, Trash, VideoCam } from '../ui/Icons';
+import { Back, Camera, ChatsTab, Menu, Mic, PhoneHandset, Plus, Search, ShareUp, Smile, Trash, VideoCam } from '../ui/Icons';
 import type { Level, LevelGlyph, Unit } from '../engine/types';
 
 const GLYPH_SIZE = 26;
@@ -15,6 +15,7 @@ const GLYPH_SIZE = 26;
 function LevelIcon({ glyph }: { glyph: LevelGlyph }) {
   const c = H.tint;
   switch (glyph) {
+    case 'phone': return <PhoneHandset size={GLYPH_SIZE} color={c} weight={2} />;
     case 'chat': return <ChatsTab size={GLYPH_SIZE} color={c} />;
     case 'sticker': return <Smile size={GLYPH_SIZE} color={c} weight={2.2} />;
     case 'mic': return <Mic size={GLYPH_SIZE} color={c} weight={2.2} />;

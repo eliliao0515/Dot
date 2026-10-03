@@ -22,11 +22,13 @@ export type Bubble =
   | { id: string; from: 'them' | 'me'; kind: 'voice'; seconds: number; showName?: boolean }
   | { id: string; from: 'them'; kind: 'link'; text: string; url: string; showName?: boolean }
   | { id: string; from: 'them' | 'me'; kind: 'sticker'; sticker: StickerId; showName?: boolean }
-  | { id: string; from: 'them' | 'me'; kind: 'contact'; name: string; showName?: boolean };
+  | { id: string; from: 'them' | 'me'; kind: 'contact'; name: string; showName?: boolean }
+  /** 通話紀錄。canceled 是還沒接通就掛掉。 */
+  | { id: string; from: 'them' | 'me'; kind: 'call'; seconds: number; canceled?: boolean; showName?: boolean };
 
 /** 使用者要完成的操作。目前只實作長按麥克風，之後可擴充 tap / swipe。 */
 export type Target = {
-  node: 'mic' | 'plus' | 'video' | 'sticker' | 'photo' | 'reply';
+  node: 'mic' | 'plus' | 'video' | 'sticker' | 'photo' | 'reply' | 'call';
   gesture: 'longPress' | 'tap';
   /** 長按門檻。手抖的人需要放寬，這個值要在真機上調。 */
   minMs: number;
@@ -40,6 +42,38 @@ export type StageScript = {
   coach?: string;
   /** 畫面底部那條低調的說明。不是提示，是安撫。 */
   note: string;
+  /** 打電話課（target.node === 'call'）用：撥出去之後對方照這個劇本講話。 */
+  call?: CallScript;
+};
+
+/* ------------------------------------------------------------------ */
+/* 語音通話劇本（specs/v2/P3-voice-call.md）                             */
+/* ------------------------------------------------------------------ */
+
+/** 對方說的一句話。text 永遠當字幕顯示；audio 是真人錄音檔（還沒錄就用裝置內建語音唸 text）。 */
+export type CallLine = { id: string; text: string; audio?: string };
+
+/** 長輩在通話畫面上要做的動作。 */
+export type CallAction = 'speakerOn' | 'hangUp';
+
+export type CallStep =
+  /** 響鈴，對方還沒接。 */
+  | { type: 'ring'; ms: number }
+  /** 對方說一句話。 */
+  | { type: 'say'; line: CallLine }
+  /** 換長輩說話：有麥克風就等他講完，沒有麥克風（或沒給權限）就等 fallbackMs。講什麼都可以，不判斷內容。 */
+  | { type: 'listen'; maxMs?: number; fallbackMs?: number }
+  /** 等長輩做某個動作。coach 是帶著做／按了卡住了才出現的引導；太久沒做，對方會說 remind。 */
+  | { type: 'expect'; action: CallAction; coach?: string; remind?: CallLine; remindAfterMs?: number };
+
+export type CallScript = {
+  steps: CallStep[];
+  /** 長輩開著靜音、輪到他講話時，對方會說這句（例如「喂？我聽不到你的聲音耶」）。 */
+  mutedLine: CallLine;
+  /** 帶著做：撥號前、對方說話時的引導。 */
+  coachDial?: string;
+  coachListen?: string;
+  coachUnmute?: string;
 };
 
 export type Lesson = {
@@ -106,6 +140,7 @@ export type PracticeQuestion = {
  * 跟 ChatRoomAvatarGlyph 一樣是內容資料，畫成什麼由外殼決定。
  */
 export type LevelGlyph =
+  | 'phone'
   | 'chat'
   | 'sticker'
   | 'mic'

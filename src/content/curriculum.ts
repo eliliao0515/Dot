@@ -41,6 +41,7 @@ const LEVEL_LIST: Level[] = [
   scenario('sticker', '傳貼圖', 'sticker'),
   scenario('voice-msg', '傳語音訊息', 'mic'),
   scenario('save-photo', '把照片存起來', 'camera'),
+  scenario('voice-call', '打語音電話', 'phone'),
   soon('video-call', '接視訊電話', 'video'),
   { id: 'line-practice', kind: 'practice', title: 'LINE 綜合練習', subtitle: '隨機出題，複習學過的技能', glyph: 'chat' },
 ];
@@ -64,7 +65,7 @@ export const UNITS: Unit[] = [
     id: 'line',
     title: 'LINE 情境',
     summary: '把學過的符號和手勢，用在 LINE 裡真的會遇到的事情上。',
-    levelIds: ['read-reply', 'sticker', 'voice-msg', 'save-photo', 'video-call', 'line-practice'],
+    levelIds: ['read-reply', 'sticker', 'voice-msg', 'save-photo', 'voice-call', 'video-call', 'line-practice'],
   },
 ];
 

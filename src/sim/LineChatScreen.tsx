@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useScale } from '../ui/Scale';
 import { C } from '../ui/theme';
 import type { Bubble, StickerId } from '../engine/types';
@@ -12,6 +12,8 @@ import {
   StickerPanel,
   ReadReceipt,
   SavedPhotoToast,
+  CallMenu,
+  topBarMetrics,
 } from './parts';
 import PhotoViewer from './PhotoViewer';
 import VoiceRecorder from './VoiceRecorder';
@@ -36,7 +38,12 @@ export type ThreadItem = { bubble: Bubble; contact: string };
  */
 export type LineAction =
   | { type: 'sendVoice' }
-  | { type: 'pressVideo' }
+  /** 按頂部電話，打開／關上電話選單。 */
+  | { type: 'openCallMenu' }
+  | { type: 'closeCallMenu' }
+  /** 在電話選單選了語音通話／視訊通話。通話畫面本身由外層決定怎麼顯示。 */
+  | { type: 'pickVoiceCall' }
+  | { type: 'pickVideoCall' }
   | { type: 'sendSticker' }
   | { type: 'savePhoto' }
   | { type: 'sendText' }
@@ -104,6 +111,7 @@ export default function LineChatScreen({
   const [viewingPhoto, setViewingPhoto] = useState<{ label: string; uri?: string } | null>(null);
   const [cameraShot, setCameraShot] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);
+  const [callMenuOpen, setCallMenuOpen] = useState(false);
   const [previewElapsed, setPreviewElapsed] = useState(0);
 
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -139,6 +147,7 @@ export default function LineChatScreen({
     setSavedPhotoToast(false);
     setViewingPhoto(null);
     setCameraShot(null);
+    setCallMenuOpen(false);
     stopPreview();
     if (playTimer.current) clearInterval(playTimer.current);
     playTimer.current = null;
@@ -332,6 +341,20 @@ export default function LineChatScreen({
   }
 
   const unbuilt = () => onAction({ type: 'unbuilt' });
+
+  function togglePhoneMenu() {
+    if (callMenuOpen) {
+      closePhoneMenu();
+      return;
+    }
+    setPanel('none');
+    setCallMenuOpen(true);
+    onAction({ type: 'openCallMenu' });
+  }
+  function closePhoneMenu() {
+    setCallMenuOpen(false);
+    onAction({ type: 'closeCallMenu' });
+  }
   const wrongTap = () => onAction({ type: 'wrongTap' });
 
   const meBubbles = thread.filter((t) => t.bubble.from === 'me');
@@ -344,8 +367,34 @@ export default function LineChatScreen({
         base={base}
         onWrongTap={wrongTap}
         onPressBack={onPressBack}
-        onPressVideo={() => onAction({ type: 'pressVideo' })}
+        onPressPhone={togglePhoneMenu}
+        onPressUnbuilt={unbuilt}
+        phoneActive={callMenuOpen}
       />
+
+      {callMenuOpen ? (
+        <>
+          {/* 點選單以外的地方就收起來 */}
+          <Pressable
+            style={[st.menuBackdrop, { top: topBarMetrics(base).height }]}
+            onPress={() => closePhoneMenu()}
+            accessibilityLabel="關閉電話選單"
+          />
+          <View style={{ position: 'absolute', left: 0, right: 0, top: topBarMetrics(base).height, zIndex: 20 }}>
+            <CallMenu
+              base={base}
+              onPickVoice={() => {
+                closePhoneMenu();
+                onAction({ type: 'pickVoiceCall' });
+              }}
+              onPickVideo={() => {
+                closePhoneMenu();
+                onAction({ type: 'pickVideoCall' });
+              }}
+            />
+          </View>
+        </>
+      ) : null}
 
       <View style={st.threadWrap}>
         <ScrollView
@@ -465,4 +514,5 @@ const st = StyleSheet.create({
   threadWrap: { flex: 1 },
   thread: { flex: 1 },
   threadInner: { padding: 14, gap: 12 },
+  menuBackdrop: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 19 },
 });

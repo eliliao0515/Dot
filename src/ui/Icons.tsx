@@ -1166,3 +1166,101 @@ export function MicOutline({ size = 28, color = '#1C1C1E', weight = 1.8 }) {
     </View>
   );
 }
+
+/**
+ * 電話話筒：一道往左下彎的粗弧線，兩端各一個聽筒和話筒的圓塊。
+ * filled 的時候弧線也是實心色塊感（線條加粗）。掛斷鍵把它轉 135 度用。
+ */
+export function PhoneHandset({ size = 24, color = '#1C1C1E', weight = 2, rotate = 0 }) {
+  const box = size * 0.62;
+  const cap = size * 0.24;
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: [{ rotate: `${rotate}deg` }],
+      }}
+    >
+      <View
+        style={{
+          width: box,
+          height: box,
+          borderLeftWidth: weight * 1.4,
+          borderBottomWidth: weight * 1.4,
+          borderColor: color,
+          borderBottomLeftRadius: box,
+        }}
+      />
+      {/* 聽筒（左上） */}
+      <View
+        style={{
+          position: 'absolute',
+          left: (size - box) / 2 - cap * 0.38,
+          top: (size - box) / 2 - cap * 0.2,
+          width: cap,
+          height: cap * 0.78,
+          borderRadius: cap * 0.3,
+          backgroundColor: color,
+          transform: [{ rotate: '-20deg' }],
+        }}
+      />
+      {/* 話筒（右下） */}
+      <View
+        style={{
+          position: 'absolute',
+          right: (size - box) / 2 - cap * 0.2,
+          bottom: (size - box) / 2 - cap * 0.38,
+          width: cap * 0.78,
+          height: cap,
+          borderRadius: cap * 0.3,
+          backgroundColor: color,
+          transform: [{ rotate: '-20deg' }],
+        }}
+      />
+    </View>
+  );
+}
+
+/** 實心攝影機（圓角方塊＋右邊三角形），電話選單的「視訊通話」用。 */
+export function VideoCamFilled({ size = 24, color = '#1C1C1E' }) {
+  return (
+    <View style={{ width: size, height: size, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: size * 0.58, height: size * 0.46, borderRadius: size * 0.1, backgroundColor: color }} />
+      <View
+        style={{
+          width: 0,
+          height: 0,
+          marginLeft: size * 0.03,
+          borderRightWidth: size * 0.26,
+          borderTopWidth: size * 0.18,
+          borderBottomWidth: size * 0.18,
+          borderRightColor: color,
+          borderTopColor: 'transparent',
+          borderBottomColor: 'transparent',
+        }}
+      />
+    </View>
+  );
+}
+
+/** 靜音：線條麥克風加一道斜線。 */
+export function MicOff({ size = 28, color = '#fff', weight = 2 }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <MicOutline size={size} color={color} weight={weight} />
+      <View
+        style={{
+          position: 'absolute',
+          width: weight * 1.2,
+          height: size * 0.95,
+          backgroundColor: color,
+          borderRadius: weight,
+          transform: [{ rotate: '-45deg' }],
+        }}
+      />
+    </View>
+  );
+}
