@@ -7,6 +7,7 @@ import NavHeader from '../ui/hig/NavHeader';
 import { GroupedList, Section } from '../ui/hig/GroupedList';
 import { SecondaryButton } from '../ui/hig/Buttons';
 import { H } from '../ui/hig/tokens';
+import { PointsCard } from './TextbookHome';
 import type { LineUser } from '../auth/lineAuth';
 
 /**
@@ -15,7 +16,7 @@ import type { LineUser } from '../auth/lineAuth';
  * 頭像用登入者本人真實的大頭貼；沒有照片或載不到就退回手繪人像，
  * 不能出現破圖。原生端目前永遠匿名（沒有 LIFF），顯示未登入狀態。
  */
-export default function MeScreen({ user, onLogout }: { user: LineUser | null; onLogout: () => void }) {
+export default function MeScreen({ user, points, onLogout }: { user: LineUser | null; points?: number; onLogout: () => void }) {
   const { base } = useScale();
   const [imgFailed, setImgFailed] = useState(false);
   const avatar = 72;
@@ -44,6 +45,8 @@ export default function MeScreen({ user, onLogout }: { user: LineUser | null; on
             </T>
           </View>
         </Section>
+
+        {points !== undefined ? <PointsCard points={points} /> : null}
 
         {user ? <SecondaryButton label="登出" onPress={onLogout} style={{ marginTop: 28 }} /> : null}
       </GroupedList>

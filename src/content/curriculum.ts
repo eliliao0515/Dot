@@ -19,7 +19,7 @@ function soon(id: string, title: string, glyph: Level['glyph']): Level {
 
 const LEVEL_LIST: Level[] = [
   // v2 P4：目前關卡頁實際列出的
-  soon('sym-quiz', '符號選擇題', 'search'),
+  { id: 'sym-quiz', kind: 'symbolQuiz', title: '符號選擇題', subtitle: '每次 10 題，答對一題 100 點', glyph: 'search' },
   soon('ges-basic', '基本手勢', 'touch'),
 
   // 單元一　認識符號
