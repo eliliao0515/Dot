@@ -1,0 +1,17 @@
+# Dot 點數伺服器（Cloudflare Workers + D1，免費方案）。
+# 部署步驟見 server/README.md。
+name = "dot-points"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+# LINE Login channel ID（LIFF ID 的前半段）。伺服器用它確認 access token 是發給 Dot 的。
+LINE_CHANNEL_ID = "2011571629"
+# 允許哪些網站呼叫這個伺服器（逗號分隔）。
+ALLOWED_ORIGINS = "https://eliliao0515.github.io,http://localhost:8081"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dot-points"
+# 由 `npx wrangler d1 create dot-points` 建立。
+database_id = "f6f9ca8c-1b32-43e3-aed2-2de6e1c6bbf5"

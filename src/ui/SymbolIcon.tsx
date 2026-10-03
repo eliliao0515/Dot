@@ -4,7 +4,7 @@ import { ICON_SVGS } from '../content/symbols/icons.generated';
 
 /**
  * 顯示符號圖庫裡的一個圖示（Ionicons，MIT）。
- * 用 data URI 把 SVG 交給 <Image>，網頁版不需要新增任何套件。
+ * 原生端用 data URI 把 SVG 交給 <Image>；網頁版見 SymbolIcon.web.tsx（直接嵌入 SVG）。
  * 原生端的 <Image> 不支援 SVG（v2 期間原生 App 不驗證），之後要上原生再換做法。
  */
 export default function SymbolIcon({ icon, size, color = '#1C1C1E' }: { icon: string; size: number; color?: string }) {

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { T, useScale } from '../ui/Scale';
+import { fz } from '../ui/theme';
 import NavHeader from '../ui/hig/NavHeader';
 import { GroupedList, Section } from '../ui/hig/GroupedList';
 import ListRow, { type RowStatus } from '../ui/hig/ListRow';
@@ -37,12 +39,26 @@ function LevelIcon({ glyph }: { glyph: LevelGlyph }) {
  * 純呈現：哪一關是什麼狀態、「接著上次」指去哪，都由 App.tsx 算好傳進來。
  * 任何一列都可以點 —— 不鎖關卡是已定案的原則；還沒做好的關卡點了給說明。
  */
+/** 累積點數。只加不扣，不顯示排名。 */
+export function PointsCard({ points }: { points: number }) {
+  const { base } = useScale();
+  return (
+    <View style={s.pointsCard} accessibilityLabel={`累積 ${points} 點`}>
+      <T systemScaling style={[s.pointsLabel, { fontSize: fz(base, 1.25), lineHeight: fz(base, 1.7) }]}>我的點數</T>
+      <T systemScaling style={[s.pointsValue, { fontSize: fz(base, 2.1), lineHeight: fz(base, 2.6) }]}>
+        {`${points.toLocaleString('zh-TW')} 點`}
+      </T>
+    </View>
+  );
+}
+
 export default function TextbookHome({
   units,
   levels,
   statusOf,
   resume,
   onOpenLevel,
+  points,
 }: {
   units: Unit[];
   levels: Record<string, Level>;
@@ -50,6 +66,8 @@ export default function TextbookHome({
   /** 最上方那顆大按鈕。沒有可以接的課就是 null。 */
   resume: { label: string; levelId: string } | null;
   onOpenLevel: (level: Level) => void;
+  /** 累積點數，顯示在最上方。 */
+  points?: number;
 }) {
   const [soonLevel, setSoonLevel] = useState<Level | null>(null);
 
@@ -63,12 +81,14 @@ export default function TextbookHome({
       <GroupedList>
         <NavHeader title="關卡" />
 
+        {points !== undefined ? <PointsCard points={points} /> : null}
+
 
         {resume ? (
           <PrimaryButton
             label={resume.label}
             onPress={() => open(levels[resume.levelId])}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: 16 }}
           />
         ) : null}
 
@@ -103,4 +123,18 @@ export default function TextbookHome({
 
 const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: H.bg },
+  pointsCard: {
+    marginTop: 8,
+    backgroundColor: H.card,
+    borderRadius: H.radius,
+    borderWidth: 1,
+    borderColor: H.cardBorder,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pointsLabel: { color: H.secondary, fontWeight: '600', fontFamily: H.fontFamily },
+  pointsValue: { color: H.tint, fontWeight: '900', fontFamily: H.fontFamily },
 });

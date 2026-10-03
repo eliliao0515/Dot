@@ -2,12 +2,14 @@ import React from 'react';
 import { Modal, Pressable, View, StyleSheet } from 'react-native';
 import { T, useScale } from '../Scale';
 import { fz } from '../theme';
-import { PrimaryButton } from './Buttons';
+import { PrimaryButton, SecondaryButton } from './Buttons';
 import { H } from './tokens';
 
 /**
  * 對應 SwiftUI .sheet：從下方滑出的說明面板。
- * 只有一顆按鈕，點背景也能關，關掉就留在原地 —— 不是錯誤，也不擋人。
+ * 平常只有一顆按鈕，點背景也能關，關掉就留在原地 —— 不是錯誤，也不擋人。
+ * 給了 onConfirm 就變成「確認」面板：上面一顆確定（confirmLabel），下面一顆取消（actionLabel）。
+ * 點背景一律等於取消，不會不小心確定。
  */
 export default function Sheet({
   visible,
@@ -15,12 +17,16 @@ export default function Sheet({
   message,
   actionLabel = '好',
   onClose,
+  confirmLabel,
+  onConfirm,
 }: {
   visible: boolean;
   title: string;
   message?: string;
   actionLabel?: string;
   onClose: () => void;
+  confirmLabel?: string;
+  onConfirm?: () => void;
 }) {
   const { base } = useScale();
   return (
@@ -37,7 +43,14 @@ export default function Sheet({
               {message}
             </T>
           ) : null}
-          <PrimaryButton label={actionLabel} onPress={onClose} style={{ marginTop: 20 }} />
+          {onConfirm ? (
+            <View style={{ marginTop: 20, gap: 12 }}>
+              <PrimaryButton label={confirmLabel ?? '確定'} onPress={onConfirm} />
+              <SecondaryButton label={actionLabel} onPress={onClose} />
+            </View>
+          ) : (
+            <PrimaryButton label={actionLabel} onPress={onClose} style={{ marginTop: 20 }} />
+          )}
         </View>
       </View>
     </Modal>

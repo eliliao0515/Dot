@@ -26,6 +26,10 @@ export async function getIdToken(): Promise<string | null> {
   return null;
 }
 
+export async function getAccessToken(): Promise<string | null> {
+  return null;
+}
+
 export async function requestLineLogin(): Promise<void> {
   // 原生端沒有 LIFF，什麼都不做。
 }

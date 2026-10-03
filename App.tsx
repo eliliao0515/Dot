@@ -11,6 +11,17 @@ import ScenarioRunner from './src/shell/ScenarioRunner';
 import LineSimulatorScreen from './src/shell/LineSimulatorScreen';
 import SimulatorsScreen from './src/shell/SimulatorsScreen';
 import { useHistoryBack } from './src/ui/useHistoryBack';
+import SymbolQuiz from './src/shell/SymbolQuiz';
+import {
+  loadPoints,
+  configurePoints,
+  awardQuizRound,
+  awardStage,
+  awardRealDevice,
+  deleteMyPoints,
+  EMPTY_POINTS,
+  type Points,
+} from './src/storage/points';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
 import GestureChallengeRunner from './src/shell/GestureChallengeRunner';
@@ -23,7 +34,7 @@ import { Book } from './src/ui/hig/glyphs';
 import { H } from './src/ui/hig/tokens';
 import KeyboardViewport from './src/ui/KeyboardViewport';
 import type { RowStatus } from './src/ui/hig/ListRow';
-import { initLineAuth, requestLineLogin, logout, type LineUser } from './src/auth/lineAuth';
+import { initLineAuth, requestLineLogin, logout, getAccessToken, type LineUser } from './src/auth/lineAuth';
 import { sha256Hex } from './src/auth/devAccess';
 import {
   loadProgress,
@@ -51,14 +62,18 @@ type StackRoute =
   | { name: 'gesture'; levelId: string; startIndex: number }
   | { name: 'gestureRealDevice'; levelId: string }
   /** 從「模擬器」分頁推進來的 LINE 模擬器，整個畫面就是 LINE。 */
-  | { name: 'lineSim' };
+  | { name: 'lineSim' }
+  /** 符號選擇題 */
+  | { name: 'symbolQuiz' };
 
 /**
  * 一關的狀態。scenario 關卡沿用 v1 的 nodeStateFor 判斷（關卡 id 等於 lessonId，
  * 舊進度直接接得上）；綜合練習和還沒做的關卡沒有進度可言。
  * gesture 關卡借用同一份進度格式：stagesDone 是猜對了幾題。
  */
-function levelStatus(progress: Progress, level: Level): RowStatus {
+function levelStatus(progress: Progress, level: Level, quizRounds = 0): RowStatus {
+  // 符號選擇題沒有「做到一半」：玩過一局就打勾，之後想玩幾次都可以。
+  if (level.kind === 'symbolQuiz') return quizRounds > 0 ? 'done' : 'none';
   if (level.kind === 'gesture') {
     const lp = progress.lessons[level.id];
     if (!lp) return 'none';
@@ -147,6 +162,7 @@ function Root() {
   const [lineUser, setLineUser] = useState<LineUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [progress, setProgress] = useState<Progress>(EMPTY_PROGRESS);
+  const [points, setPoints] = useState<Points>(EMPTY_POINTS);
 
   // 身分是加分項：拿不到就匿名繼續，畫面不等它 —— 這在原生端仍然成立。
   // 網頁端則是例外：2026-09-13 使用者已知情推翻「不要註冊登入」，
@@ -159,6 +175,14 @@ function Root() {
       const user = liffUser ?? devLoginUser();
       setLineUser(user);
       setAuthChecked(true);
+      // 點數存在伺服器，依 LINE 身分。開發模式的假身分送 "dev:<id>"，只有本機伺服器（DEV_MODE）認得。
+      configurePoints({
+        identity: user?.userId ?? null,
+        token: liffUser ? getAccessToken : async () => (user ? `dev:${user.userId}` : null),
+      });
+      loadPoints().then((p) => {
+        if (alive) setPoints(p);
+      });
       loadProgress().then((p) => {
         if (alive) setProgress(p);
       });
@@ -175,8 +199,12 @@ function Root() {
   // 全螢幕的畫面（課程、LINE 模擬器）打開時，按手機或瀏覽器的上一頁就回到原本的分頁。
   useHistoryBack(stack !== null, () => setStack(null));
 
+
   function advance() {
     if (!stack || stack.name !== 'sim' || !lesson) return;
+    // 第一次完成這一步才給點數；重做已經做過的步驟不再給，避免同一步一直刷。
+    const doneBefore = progress.lessons[lesson.id]?.stagesDone ?? 0;
+    if (stack.stageIndex >= doneBefore) awardStage(lesson.id, stack.stageIndex).then(setPoints);
     recordStageDone(progress, lesson.id, stack.stageIndex).then(setProgress);
     const next = stack.stageIndex + 1;
     if (next < lesson.stages.length) {
@@ -187,6 +215,10 @@ function Root() {
   }
 
   function openLevel(level: Level) {
+    if (level.kind === 'symbolQuiz') {
+      setStack({ name: 'symbolQuiz' });
+      return;
+    }
     if (level.kind === 'practice') {
       setStack({ name: 'practice' });
       return;
@@ -254,6 +286,7 @@ function Root() {
               realDevice={lesson.realDevice}
               onConfirm={() => {
                 // 只有真的在自己手機上做到才記。跳過不算，也不會被追究。
+                if (!progress.lessons[lesson.id]?.realDeviceDone) awardRealDevice(lesson.id).then(setPoints);
                 recordRealDevice(progress, lesson.id).then(setProgress);
                 setStack({ name: 'done', lessonId: lesson.id });
               }}
@@ -268,6 +301,14 @@ function Root() {
           {stack.name === 'practice' ? <PracticeSession onExit={() => setStack(null)} /> : null}
 
           {stack.name === 'lineSim' ? <LineSimulatorScreen user={lineUser} onExit={() => setStack(null)} /> : null}
+
+          {stack.name === 'symbolQuiz' ? (
+            <SymbolQuiz
+              totalPoints={points.total}
+              onFinishRound={(correct) => awardQuizRound(correct).then(setPoints)}
+              onExit={() => setStack(null)}
+            />
+          ) : null}
         </>
       ) : (
         <View style={{ flex: 1, backgroundColor: H.bg }}>
@@ -276,8 +317,9 @@ function Root() {
               <TextbookHome
                 units={UNITS}
                 levels={LEVELS}
-                statusOf={(level) => levelStatus(progress, level)}
+                statusOf={(level) => levelStatus(progress, level, points.quizRounds)}
                 resume={resumeTarget(progress)}
+                points={points.total}
                 onOpenLevel={openLevel}
               />
             ) : null}
@@ -287,9 +329,17 @@ function Root() {
             {activeTab === 'me' ? (
               <MeScreen
                 user={lineUser}
+                points={points.total}
+                onDeletePoints={() =>
+                  deleteMyPoints().then((ok) => {
+                    if (ok) setPoints(EMPTY_POINTS);
+                    return ok;
+                  })
+                }
                 onLogout={() => {
                   logout();
                   setLineUser(null);
+                  setPoints(EMPTY_POINTS);
                   setActiveTab('levels');
                 }}
               />

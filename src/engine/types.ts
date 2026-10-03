@@ -171,6 +171,8 @@ type LevelBase = {
 export type Level =
   | (LevelBase & { kind: 'scenario'; lessonId: string })
   | (LevelBase & { kind: 'practice' })
+  /** 符號選擇題（P4c）：每次隨機出題，答對得點數。 */
+  | (LevelBase & { kind: 'symbolQuiz' })
   | (LevelBase & { kind: 'gesture'; script: GestureLevelScript })
   | (LevelBase & { kind: 'comingSoon' });
 

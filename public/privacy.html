@@ -112,32 +112,71 @@
 <section id="zh" lang="zh-Hant">
 
 <h1>隱私權政策</h1>
-<p class="meta">最後更新日期：<span class="fill">2026-09-12（請於每次修訂本頁時更新此日期）</span></p>
+<p class="meta">最後更新日期：2026-10-04</p>
 
 <p>本頁說明「長輩手機練習」（下稱「本服務」，網頁版名稱 Dot）在使用者使用過程中，個人資料如何被蒐集、利用與保護。本服務由<span class="fill">〔開發者姓名或慣用名稱，請自行填入〕</span>（下稱「開發者」）獨立開發與維運，為個人非商業性質之專案，並非公司或其他法人組織。</p>
 
 <h2>一、服務性質</h2>
-<p>本服務是一套教導 65 歲以上使用者操作智慧型手機通訊軟體介面的沙盒模擬練習工具。畫面中出現的所有聯絡人、對話內容與情境，均為預先編寫的教學情境，並非真實人物或真實訊息往來——使用本服務不會、也無法傳送任何訊息給真實的人。</p>
+<p>本服務是一套教導 65 歲以上使用者認識手機符號、操作智慧型手機通訊軟體介面的沙盒模擬練習工具，並以點數鼓勵學員於工作坊中練習。畫面中出現的所有聯絡人、對話內容與情境，均為預先編寫的教學情境，並非真實人物或真實訊息往來——使用本服務不會、也無法傳送任何訊息給真實的人。</p>
 
-<h2>二、本版本目前實際蒐集之個人資料</h2>
-<p>本節描述<strong>本服務目前部署版本的實際行為</strong>，皆已對照原始碼確認：</p>
+<h2>二、本服務蒐集之個人資料</h2>
+<p>本節描述<strong>本服務目前部署版本的實際行為</strong>，皆已對照原始碼確認。</p>
+<p>本服務網頁版需使用 LINE 帳號登入（透過 LINE 官方提供之 LIFF 技術），本服務向 LINE 申請之權限範圍僅止於 <code>profile</code>。登入後蒐集與利用下列資料：</p>
+<table style="width:100%; border-collapse: collapse; margin: 12px 0;">
+  <tr style="border-bottom: 1px solid var(--line);">
+    <th style="text-align:left; padding: 8px 4px;">資料</th>
+    <th style="text-align:left; padding: 8px 4px;">用途</th>
+    <th style="text-align:left; padding: 8px 4px;">存放位置</th>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--line);">
+    <td style="padding: 8px 4px;">LINE 使用者識別碼（User ID）</td>
+    <td style="padding: 8px 4px;">辨認「這是同一位使用者」，以保存點數與練習進度</td>
+    <td style="padding: 8px 4px;">開發者使用之 Cloudflare 伺服器；使用者裝置之瀏覽器儲存空間</td>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--line);">
+    <td style="padding: 8px 4px;">LINE 顯示名稱、大頭貼圖片網址</td>
+    <td style="padding: 8px 4px;">僅顯示於本服務「我」頁面</td>
+    <td style="padding: 8px 4px;"><strong>僅存在使用者裝置</strong>，不傳送至開發者伺服器</td>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--line);">
+    <td style="padding: 8px 4px;">點數、遊戲局數、已完成之練習步驟</td>
+    <td style="padding: 8px 4px;">工作坊活動之點數累積</td>
+    <td style="padding: 8px 4px;">開發者使用之 Cloudflare 伺服器；使用者裝置</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px 4px;">練習進度（例如做到第幾關）</td>
+    <td style="padding: 8px 4px;">下次開啟時接續練習</td>
+    <td style="padding: 8px 4px;">使用者裝置之瀏覽器儲存空間</td>
+  </tr>
+</table>
 <ul>
-  <li>本服務<strong>不需要註冊或登入</strong>即可使用全部練習內容。</li>
-  <li>本服務<strong>目前未蒐集任何足以直接或間接識別使用者身分的個人資料</strong>。</li>
-  <li>使用過程中的練習進度、模擬對話狀態，僅存在於使用者當下瀏覽器分頁的暫存記憶體中；關閉分頁或重新整理頁面即會清除，開發者沒有、也無法將這些內容傳輸或儲存到任何伺服器或資料庫——因為本服務目前並未架設任何後端伺服器。</li>
+  <li>畫面中出現的聯絡人與對話均為預先編寫之教學情境。使用者在練習中輸入的文字、錄的語音、選的照片，<strong>只存在當下的練習畫面，不會傳送至任何伺服器</strong>，關閉頁面即消失。</li>
   <li>本服務<strong>未使用</strong>任何網站流量分析、行為追蹤或廣告工具（例如 Google Analytics、Meta Pixel 等）。</li>
-  <li>本服務<strong>未使用</strong> Cookie 或任何形式的本機追蹤技術儲存個人資料。</li>
+  <li>本服務使用瀏覽器之本機儲存空間（LocalStorage）保存登入狀態、練習進度與待送出之點數，不用於追蹤使用者。</li>
 </ul>
 
-<h2>三、規劃中、尚未啟用的功能</h2>
-<div class="planned">
-  <span class="planned-label">規劃中・尚未上線</span>
-  <p>為了讓使用者的學習進度能夠保存並在下次開啟時接續練習，本服務<strong>規劃</strong>於後續版本加入「使用 LINE 帳號登入」功能（透過 LINE 官方提供的 LIFF 技術）。以下說明僅描述<strong>規劃中的設計</strong>，在該功能實際隨對應版本上線前，本服務並不會、也沒有能力進行下列任何一項資料蒐集行為。此功能一旦啟用，開發者會同步更新本頁最上方之「最後更新日期」，並於服務內以顯著方式重新告知使用者。</p>
-  <p><strong>規劃蒐集之資料類別：</strong>LINE 使用者識別碼（User ID）、顯示名稱（Display Name）、大頭貼圖片網址（Picture URL）——這三項是 LINE LIFF 於 <code>profile</code> 權限範圍下可提供的欄位。</p>
-  <p><strong>明確排除、不會蒐集：</strong>電子郵件信箱、電話號碼、LINE 好友清單、LINE 聊天訊息內容、位置資訊。本服務規劃申請的 LIFF 權限範圍僅止於 <code>profile</code>，不會申請 <code>email</code> 權限。</p>
-  <p><strong>規劃用途：</strong>前述識別資料僅用於辨認「這是同一位使用者」，以便將學習進度（例如已完成哪些練習、進行到第幾階段）保存在<strong>使用者自己的裝置本機儲存空間</strong>（例如瀏覽器的 LocalStorage）。這些進度資料規劃為只存在使用者自己的裝置上，<strong>不會上傳、傳輸至開發者或任何第三方持有的伺服器</strong>——因為本服務規劃階段並未包含架設任何後端伺服器或資料庫。</p>
-  <p><strong>是否為必要項目：</strong><span class="fill">〔請確認：規劃中的 LINE 登入功能是否為選擇性使用？若為選擇性，使用者不登入應仍可以匿名身分使用本服務全部練習內容，僅無法保存或跨裝置接續進度。此頁目前依此假設撰寫，若實際設計為強制登入，本段與下方「不提供個資之影響」都需要重寫。〕</span></p>
-</div>
+<h2>三、裝置權限之使用</h2>
+<table style="width:100%; border-collapse: collapse; margin: 12px 0;">
+  <tr style="border-bottom: 1px solid var(--line);">
+    <th style="text-align:left; padding: 8px 4px;">權限</th>
+    <th style="text-align:left; padding: 8px 4px;">何時詢問</th>
+    <th style="text-align:left; padding: 8px 4px;">如何使用</th>
+    <th style="text-align:left; padding: 8px 4px;">是否上傳</th>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--line);">
+    <td style="padding: 8px 4px;">麥克風</td>
+    <td style="padding: 8px 4px;">於「打語音電話」練習中按下「語音通話」時</td>
+    <td style="padding: 8px 4px;"><strong>僅判斷音量高低</strong>（使用者是否正在說話、是否說完），不辨識說話內容、不錄音</td>
+    <td style="padding: 8px 4px;"><strong>否</strong></td>
+  </tr>
+  <tr>
+    <td style="padding: 8px 4px;">相機、相簿</td>
+    <td style="padding: 8px 4px;">於 LINE 模擬器中按相機或照片按鈕時</td>
+    <td style="padding: 8px 4px;">拍攝或選取之照片僅顯示於當下的練習對話，關閉頁面即消失</td>
+    <td style="padding: 8px 4px;"><strong>否</strong></td>
+  </tr>
+</table>
+<p>拒絕任何權限均不影響使用其他練習內容；未授權麥克風時，打電話練習仍可進行。</p>
 
 <h2>四、個人資料類別總表</h2>
 <table style="width:100%; border-collapse: collapse; margin: 12px 0;">
@@ -146,47 +185,52 @@
     <th style="text-align:left; padding: 8px 4px;">資料類別</th>
   </tr>
   <tr style="border-bottom: 1px solid var(--line);">
-    <td style="padding: 8px 4px;">現行（已實作）</td>
-    <td style="padding: 8px 4px;">無</td>
+    <td style="padding: 8px 4px;">蒐集並存放於開發者使用之伺服器</td>
+    <td style="padding: 8px 4px;">LINE 使用者識別碼、點數、遊戲局數、已完成之練習步驟</td>
   </tr>
   <tr style="border-bottom: 1px solid var(--line);">
-    <td style="padding: 8px 4px;">規劃中（尚未啟用）</td>
-    <td style="padding: 8px 4px;">LINE 使用者識別碼、顯示名稱、大頭貼圖片網址</td>
+    <td style="padding: 8px 4px;">僅存放於使用者裝置</td>
+    <td style="padding: 8px 4px;">LINE 顯示名稱、大頭貼圖片網址、練習進度</td>
   </tr>
   <tr>
-    <td style="padding: 8px 4px;">明確排除</td>
-    <td style="padding: 8px 4px;">電子郵件、電話號碼、地址、LINE 好友清單、聊天訊息內容、位置資訊</td>
+    <td style="padding: 8px 4px;">明確排除、不蒐集</td>
+    <td style="padding: 8px 4px;">電子郵件、電話號碼、地址、LINE 好友清單、LINE 聊天訊息內容、位置資訊、錄音、照片</td>
   </tr>
 </table>
 
 <h2>五、利用之期間、地區、對象及方式</h2>
 <ul>
-  <li><strong>期間：</strong>現行版本不蒐集資料，無保存期間問題。規劃中功能上線後，識別資料與進度資料僅存於使用者自己的裝置本機，保存期間由使用者自行決定（清除瀏覽器資料、解除安裝、或執行服務內建的清除功能即會移除），開發者並無另訂保存期限，因為資料本來就不在開發者手中。</li>
-  <li><strong>地區：</strong>本服務以網頁形式提供，使用者可能於全球任何地區存取；本服務之網頁託管於美國 GitHub, Inc. 所提供之 GitHub Pages 服務。</li>
-  <li><strong>對象：</strong>開發者（服務開發與維運單位）。規劃中的登入功能會涉及 LINE 平台（其營運公司為 LY Corporation）作為第三方身分驗證服務提供者。</li>
-  <li><strong>方式：</strong>現行不蒐集；規劃中功能為使用者裝置本機儲存，非開發者伺服器持有或處理。</li>
+  <li><strong>期間：</strong>伺服器上之資料保存至使用者自行於本服務「我」頁面刪除為止；使用者未自行刪除者，開發者於本計畫結束後六個月內統一刪除全部伺服器資料。使用者裝置上之資料由使用者自行決定保存（清除瀏覽器資料即會移除）。</li>
+  <li><strong>地區：</strong>本服務網頁託管於 GitHub Pages（GitHub, Inc.，美國）；點數伺服器使用 Cloudflare, Inc.（美國）之 Workers 與 D1 服務，資料可能存放於台灣以外之地區。</li>
+  <li><strong>對象：</strong>開發者。LINE 平台（LY Corporation）為身分驗證服務提供者；Cloudflare, Inc. 為伺服器服務提供者。開發者不會將個人資料提供予其他第三人。</li>
+  <li><strong>方式：</strong>以電子方式儲存與處理。伺服器僅接受經 LINE 驗證之登入狀態寫入資料，並由伺服器依固定規則計算點數。</li>
 </ul>
 
 <h2>六、當事人權利</h2>
-<p>依個人資料保護法第 3 條，使用者就其個人資料依法得行使下列權利：查詢或請求閱覽、請求製給複製本、請求補充或更正、請求停止蒐集處理或利用、請求刪除。</p>
-<p>現行版本本服務不蒐集任何個人資料，前述權利目前無適用對象。規劃中的登入功能上線後，因識別資料與進度資料皆儲存於使用者自己的裝置本機，行使「刪除」權利的方式即為：清除瀏覽器儲存空間，或執行服務內建之清除/登出功能（若尚未提供此功能，直接清除瀏覽器資料或解除安裝即可達到相同效果）。如有查詢閱覽、複製本、補充更正等需求，或對前述行使方式有疑問，請透過下方聯絡方式與開發者聯繫。</p>
+<p>依個人資料保護法第 3 條，使用者就其個人資料得行使下列權利：查詢或請求閱覽、請求製給複製本、請求補充或更正、請求停止蒐集處理或利用、請求刪除。</p>
+<ul>
+  <li><strong>刪除：</strong>於本服務「我」頁面按「清除我的點數紀錄」，即會刪除開發者伺服器上與該 LINE 帳號相關之全部資料，以及該裝置上之點數紀錄。</li>
+  <li><strong>停止利用：</strong>於「我」頁面登出並刪除點數紀錄後，本服務即不再保有該使用者之伺服器資料。</li>
+  <li><strong>其他權利：</strong>如需查詢閱覽、製給複製本或補充更正，請透過下方聯絡方式與開發者聯繫。</li>
+</ul>
 
 <h2>七、不提供個人資料之影響</h2>
-<p>現行版本不需要提供任何個人資料即可使用本服務全部內容。<span class="fill">〔規劃中：不使用 LINE 登入功能，僅代表使用者無法保存或跨裝置接續學習進度，不影響其餘練習內容之使用——此段落待第三節「是否為必要項目」確認後定案。〕</span></p>
+<p>本服務網頁版需以 LINE 帳號登入方可使用。不同意登入者將無法自行使用本服務；於工作坊現場，可請工作人員以示範裝置帶領體驗。</p>
 
 <h2>八、第三方服務揭露</h2>
 <ul>
-  <li><strong>LINE 平台（LY Corporation）：</strong>規劃中的登入功能將透過 LINE 官方 LIFF 技術驗證使用者身分，該部分資料之處理依 LINE 官方隱私權政策為準：<a href="https://line.me/en/terms/policy/" target="_blank" rel="noopener">https://line.me/en/terms/policy/</a>（<span class="fill">請於實際串接前確認此連結為當時 LINE 官方最新隱私權政策網址</span>）。</li>
+  <li><strong>LINE 平台（LY Corporation）：</strong>本服務透過 LINE 官方 LIFF 技術驗證使用者身分，伺服器會向 LINE 確認登入狀態並取得使用者識別碼。該部分資料之處理依 LINE 官方隱私權政策為準：<a href="https://line.me/en/terms/policy/" target="_blank" rel="noopener">https://line.me/en/terms/policy/</a>。</li>
+  <li><strong>Cloudflare, Inc.：</strong>本服務之點數伺服器使用 Cloudflare Workers 與 D1 資料庫。Cloudflare 作為服務提供者可能記錄連線之技術性資訊（例如 IP 位址），其處理方式依 Cloudflare 隱私權政策為準：<a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">https://www.cloudflare.com/privacypolicy/</a>。</li>
   <li><strong>GitHub Pages（GitHub, Inc.）：</strong>本服務網頁託管於 GitHub Pages 靜態網頁代管服務。作為代管服務之標準作業，GitHub 之伺服器可能於連線紀錄中記錄造訪者之 IP 位址、瀏覽器類型等技術性連線資訊。這類紀錄由 GitHub 依其自身身分作為代管服務提供者自行產生與保存，並非開發者蒐集或持有，其處理方式依 GitHub 隱私權聲明為準：<a href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">https://docs.github.com/site-policy/privacy-policies/github-privacy-statement</a>。</li>
 </ul>
 
 <h2>九、未成年人與受監護人</h2>
-<p>本服務目標使用族群為 65 歲以上高齡者，部分使用者可能因認知、視力或行動限制，於家屬、照顧者或志工協助下操作本服務。若操作係由第三人代為進行（包括代為完成規劃中之登入程序），視同該名使用者本人之操作行為，開發者無法亦不會實質查核實際操作者之身分。</p>
+<p>本服務目標使用族群為 65 歲以上高齡者，部分使用者可能因認知、視力或行動限制，於家屬、照顧者或志工協助下操作本服務。若操作係由第三人代為進行（包括代為完成登入程序），視同該名使用者本人之操作行為，開發者無法亦不會實質查核實際操作者之身分。</p>
 <p>本服務內容不特別鎖定未滿 18 歲之使用者。若監護人發現未成年人於未經同意情況下使用本服務並提供個人資料，請透過下方聯絡方式通知開發者，將依第六節所述權利行使方式協助處理。</p>
 
 <h2>十、政策之修訂</h2>
 <p>開發者保留隨時修訂本政策之權利，修訂後將更新本頁最上方之「最後更新日期」。</p>
-<p>若本服務未來新增「伺服器同步」相關功能（例如規劃中的子女／照顧者後台可查看使用者學習進度），此屬於資料蒐集目的與利用方式之重大變更。開發者會在該功能實際上線前更新本政策，並以顯著方式重新告知使用者，屆時視情況可能需要重新取得使用者同意。</p>
+<p>若本服務未來新增排行榜（於工作坊現場顯示其他使用者之名稱與點數）、子女／照顧者後台等功能，屬資料利用方式之重大變更，開發者會於該功能上線前更新本政策，並以顯著方式重新告知使用者及重新取得同意。</p>
 
 <h2>十一、聯絡方式</h2>
 <p>
@@ -206,81 +250,78 @@
 <section id="en" lang="en">
 
 <h1>Privacy Policy</h1>
-<p class="meta">Last updated: <span class="fill">2026-09-12 (update this date whenever this page is revised)</span></p>
+<p class="meta">Last updated: 2026-10-04</p>
 
 <p>This page explains how "Dot" (Traditional Chinese name: 長輩手機練習, a phone-skills sandbox simulator for elderly learners; referred to below as "the Service") handles personal data. The Service is developed and operated by <span class="fill">〔developer's name or handle, please fill in〕</span> ("the developer"), as an individual, non-commercial project — not a company or other corporate entity.</p>
 
 <h2>1. Nature of the Service</h2>
-<p>The Service is a sandbox simulator that teaches users aged 65 and above how to operate the interface of a mobile messaging app. Every contact, conversation, and scenario shown is scripted teaching content — none of it is a real person or a real message; using the Service never sends any message to a real human being.</p>
+<p>The Service is a sandbox simulator that teaches users aged 65 and above to recognize common phone symbols and operate the interface of a mobile messaging app, and uses points to encourage practice at workshops. Every contact, conversation, and scenario shown is scripted teaching content — none of it is a real person or a real message; using the Service never sends any message to a real human being.</p>
 
-<h2>2. Data Currently Collected by the Deployed Version</h2>
-<p>This section describes the <strong>actual behavior of the currently deployed version</strong>, verified directly against the source code:</p>
+<h2>2. Personal Data Collected</h2>
+<p>This section describes the <strong>actual behavior of the currently deployed version</strong>, verified against the source code.</p>
+<p>The web version of the Service requires signing in with a LINE account (via LINE's official LIFF technology). The Service requests only the <code>profile</code> scope from LINE. After sign-in, the following data is collected and used:</p>
+<table style="width:100%; border-collapse: collapse; margin: 12px 0;">
+  <tr style="border-bottom: 1px solid var(--line);"><th style="text-align:left; padding: 8px 4px;">Data</th><th style="text-align:left; padding: 8px 4px;">Purpose</th><th style="text-align:left; padding: 8px 4px;">Where it is stored</th></tr>
+  <tr style="border-bottom: 1px solid var(--line);"><td style="padding: 8px 4px;">LINE user ID</td><td style="padding: 8px 4px;">To recognize "the same user" so points and practice progress can be kept</td><td style="padding: 8px 4px;">The developer's Cloudflare server; the browser storage on the user's device</td></tr>
+  <tr style="border-bottom: 1px solid var(--line);"><td style="padding: 8px 4px;">LINE display name, profile picture URL</td><td style="padding: 8px 4px;">Shown only on the Service's "Me" page</td><td style="padding: 8px 4px;"><strong>On the user's device only</strong>; never sent to the developer's server</td></tr>
+  <tr style="border-bottom: 1px solid var(--line);"><td style="padding: 8px 4px;">Points, number of quiz rounds, completed practice steps</td><td style="padding: 8px 4px;">Points earned during workshop activities</td><td style="padding: 8px 4px;">The developer's Cloudflare server; the user's device</td></tr>
+  <tr><td style="padding: 8px 4px;">Practice progress (e.g. which stage was reached)</td><td style="padding: 8px 4px;">To resume practice next time</td><td style="padding: 8px 4px;">The browser storage on the user's device</td></tr>
+</table>
 <ul>
-  <li>The Service requires <strong>no account and no sign-in</strong> to use any of its content.</li>
-  <li>The Service <strong>currently collects no personal data</strong> capable of directly or indirectly identifying a user.</li>
-  <li>Lesson progress and simulated conversation state exist only in the current browser tab's in-memory session; closing or reloading the tab clears them. The developer neither transmits nor stores this content on any server or database, because the Service currently has no backend server at all.</li>
-  <li>The Service uses <strong>no</strong> analytics, tracking, or advertising tools of any kind (e.g. Google Analytics, Meta Pixel).</li>
-  <li>The Service uses <strong>no</strong> cookies or any local tracking mechanism to store personal data.</li>
+  <li>All contacts and conversations shown are scripted teaching scenarios. Text the user types, voice the user records, and photos the user picks during practice <strong>exist only on the current practice screen and are never sent to any server</strong>; they disappear when the page is closed.</li>
+  <li>The Service does <strong>not</strong> use any web analytics, behavioral tracking, or advertising tools (e.g. Google Analytics, Meta Pixel).</li>
+  <li>The Service uses the browser's local storage (LocalStorage) to keep the sign-in state, practice progress, and points waiting to be sent; it is not used to track users.</li>
 </ul>
 
-<h2>3. Planned, Not-Yet-Active Features</h2>
-<div class="planned">
-  <span class="planned-label">Planned · Not Live Yet</span>
-  <p>To let a learner's progress persist between visits, the Service <strong>plans</strong> to add "Sign in with LINE" (via LINE's official LIFF technology) in a future version. Everything below describes that <strong>planned design only</strong> — until the corresponding version actually ships, the Service does not and cannot perform any of the data collection described here. Once activated, the developer will update the "Last updated" date at the top of this page and re-notify users prominently within the Service.</p>
-  <p><strong>Planned data categories:</strong> LINE User ID, Display Name, and Picture URL — the three fields available under LIFF's <code>profile</code> scope.</p>
-  <p><strong>Explicitly excluded, never collected:</strong> email address, phone number, LINE friend list, LINE chat message content, location data. The Service plans to request only the <code>profile</code> LIFF scope, never <code>email</code>.</p>
-  <p><strong>Planned purpose:</strong> the identifying data above would be used solely to recognize "this is the same user" so that lesson progress (which lessons are complete, which stage a lesson is on) can be saved to <strong>the user's own device</strong> (e.g. browser LocalStorage). This progress data is planned to remain on the user's own device only — <strong>never uploaded to any server held by the developer or any third party</strong> — because the plan does not include standing up any backend server or database.</p>
-  <p><strong>Whether this will be mandatory:</strong> <span class="fill">〔Please confirm: will the planned LINE sign-in be optional? If optional, a user who declines should still be able to use every lesson anonymously, only without persisted/cross-device progress. This page is written on that assumption; if the actual design makes sign-in mandatory, this paragraph and Section 7 below both need rewriting.〕</span></p>
-</div>
+<h2>3. Use of Device Permissions</h2>
+<table style="width:100%; border-collapse: collapse; margin: 12px 0;">
+  <tr style="border-bottom: 1px solid var(--line);"><th style="text-align:left; padding: 8px 4px;">Permission</th><th style="text-align:left; padding: 8px 4px;">When it is requested</th><th style="text-align:left; padding: 8px 4px;">How it is used</th><th style="text-align:left; padding: 8px 4px;">Uploaded?</th></tr>
+  <tr style="border-bottom: 1px solid var(--line);"><td style="padding: 8px 4px;">Microphone</td><td style="padding: 8px 4px;">When the user taps "Voice call" in the voice-call practice</td><td style="padding: 8px 4px;"><strong>Only the volume level is measured</strong> (whether the user is speaking and has finished); speech is not recognized or recorded</td><td style="padding: 8px 4px;"><strong>No</strong></td></tr>
+  <tr><td style="padding: 8px 4px;">Camera, photo library</td><td style="padding: 8px 4px;">When the user taps the camera or photo button in the LINE simulator</td><td style="padding: 8px 4px;">Photos taken or picked appear only in the current practice conversation and disappear when the page is closed</td><td style="padding: 8px 4px;"><strong>No</strong></td></tr>
+</table>
+<p>Declining any permission does not affect the rest of the practice content; the voice-call practice still works without microphone access.</p>
 
 <h2>4. Data Category Summary</h2>
 <table style="width:100%; border-collapse: collapse; margin: 12px 0;">
-  <tr style="border-bottom: 1px solid var(--line);">
-    <th style="text-align:left; padding: 8px 4px;">Status</th>
-    <th style="text-align:left; padding: 8px 4px;">Categories</th>
-  </tr>
-  <tr style="border-bottom: 1px solid var(--line);">
-    <td style="padding: 8px 4px;">Current (live)</td>
-    <td style="padding: 8px 4px;">None</td>
-  </tr>
-  <tr style="border-bottom: 1px solid var(--line);">
-    <td style="padding: 8px 4px;">Planned (not live)</td>
-    <td style="padding: 8px 4px;">LINE User ID, Display Name, Picture URL</td>
-  </tr>
-  <tr>
-    <td style="padding: 8px 4px;">Explicitly excluded</td>
-    <td style="padding: 8px 4px;">Email, phone number, address, LINE friend list, chat content, location</td>
-  </tr>
+  <tr style="border-bottom: 1px solid var(--line);"><th style="text-align:left; padding: 8px 4px;">Status</th><th style="text-align:left; padding: 8px 4px;">Data categories</th></tr>
+  <tr style="border-bottom: 1px solid var(--line);"><td style="padding: 8px 4px;">Collected and stored on the developer's server</td><td style="padding: 8px 4px;">LINE user ID, points, number of quiz rounds, completed practice steps</td></tr>
+  <tr style="border-bottom: 1px solid var(--line);"><td style="padding: 8px 4px;">Stored on the user's device only</td><td style="padding: 8px 4px;">LINE display name, profile picture URL, practice progress</td></tr>
+  <tr><td style="padding: 8px 4px;">Explicitly excluded, never collected</td><td style="padding: 8px 4px;">Email, phone number, address, LINE friend list, LINE chat content, location, voice recordings, photos</td></tr>
 </table>
 
 <h2>5. Period, Region, Recipients, and Manner of Use</h2>
 <ul>
-  <li><strong>Period:</strong> the current version collects nothing, so no retention period applies. Once the planned feature ships, identifying and progress data live only on the user's own device; retention is entirely up to the user (clearing browser data, uninstalling, or using an in-app clear function removes it) — the developer sets no separate retention period because the developer never holds the data.</li>
-  <li><strong>Region:</strong> the Service is a website, reachable from anywhere; it is hosted on GitHub Pages, operated by GitHub, Inc. (USA).</li>
-  <li><strong>Recipients:</strong> the developer (developer and operator). The planned sign-in feature would involve the LINE platform (operated by LY Corporation) as a third-party identity provider.</li>
-  <li><strong>Manner:</strong> currently none; the planned feature stores data on the user's own device, not on any server held by the developer.</li>
+  <li><strong>Period:</strong> Data on the server is kept until the user deletes it from the Service's "Me" page. Data not deleted by the user will be deleted from the server by the developer within six months after this project ends. Data on the user's device is kept at the user's discretion (clearing browser data removes it).</li>
+  <li><strong>Region:</strong> The web pages are hosted on GitHub Pages (GitHub, Inc., USA). The points server uses Cloudflare, Inc.'s (USA) Workers and D1 services; data may be stored outside Taiwan.</li>
+  <li><strong>Recipients:</strong> The developer. The LINE platform (LY Corporation) acts as the identity provider; Cloudflare, Inc. acts as the server provider. The developer does not provide personal data to any other third party.</li>
+  <li><strong>Manner:</strong> Stored and processed electronically. The server only accepts writes from sign-ins verified with LINE, and calculates points by fixed rules on the server side.</li>
 </ul>
 
 <h2>6. Data Subject Rights</h2>
-<p>Under Taiwan's Personal Data Protection Act, Article 3, users may exercise the following rights over their personal data: to inquire or request access, to request a copy, to request supplementation or correction, to request cessation of collection, processing, or use, and to request deletion.</p>
-<p>Since the current version collects no personal data, these rights currently have nothing to apply to. Once the planned sign-in feature ships, because identifying and progress data live only on the user's own device, exercising the "deletion" right means: clearing browser storage, or using the Service's built-in clear/sign-out function (if not yet provided, clearing browser data or uninstalling achieves the same effect). For any other request or question, please contact the developer using the details below.</p>
+<p>Under Article 3 of Taiwan's Personal Data Protection Act, users may request to inquire about or review their personal data, obtain copies, supplement or correct it, stop its collection, processing, or use, and have it deleted.</p>
+<ul>
+  <li><strong>Deletion:</strong> Tapping "清除我的點數紀錄" (Clear my points record) on the "Me" page deletes all data related to that LINE account on the developer's server, as well as the points record on that device.</li>
+  <li><strong>Stopping use:</strong> After signing out and clearing the points record on the "Me" page, the Service no longer holds that user's server data.</li>
+  <li><strong>Other rights:</strong> For review, copies, or corrections, please contact the developer using the contact details below.</li>
+</ul>
 
 <h2>7. Consequences of Not Providing Personal Data</h2>
-<p>The current version requires no personal data at all to use every part of the Service. <span class="fill">〔Planned: declining LINE sign-in only means progress cannot be saved or carried across devices; it does not restrict access to any lesson content — this paragraph depends on the "mandatory or optional" confirmation in Section 3.〕</span></p>
+<p>The web version of the Service requires signing in with LINE. Users who do not agree to sign in cannot use the Service on their own; at workshops, staff can guide them through a demonstration device instead.</p>
 
 <h2>8. Third-Party Services</h2>
 <ul>
-  <li><strong>LINE Platform (LY Corporation):</strong> the planned sign-in feature would authenticate users via LINE's official LIFF technology; that portion of data handling is governed by LINE's own privacy policy: <a href="https://line.me/en/terms/policy/" target="_blank" rel="noopener">https://line.me/en/terms/policy/</a> (<span class="fill">please confirm this is LINE's current official policy URL before actual integration</span>).</li>
-  <li><strong>GitHub Pages (GitHub, Inc.):</strong> the Service is hosted as a static site on GitHub Pages. As standard practice for any hosting provider, GitHub's servers may log visitor connection information such as IP address and browser type. These logs are generated and retained by GitHub in its own capacity as host, not collected or held by the developer, and are governed by GitHub's own privacy statement: <a href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">https://docs.github.com/site-policy/privacy-policies/github-privacy-statement</a>.</li>
+  <li><strong>LINE platform (LY Corporation):</strong> The Service verifies users through LINE's official LIFF technology; the server confirms the sign-in with LINE and obtains the user ID. LINE's handling of this data is governed by LINE's privacy policy: <a href="https://line.me/en/terms/policy/" target="_blank" rel="noopener">https://line.me/en/terms/policy/</a>.</li>
+  <li><strong>Cloudflare, Inc.:</strong> The points server runs on Cloudflare Workers with a D1 database. As a service provider, Cloudflare may log technical connection information (such as IP addresses), governed by Cloudflare's privacy policy: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">https://www.cloudflare.com/privacypolicy/</a>.</li>
+  <li><strong>GitHub Pages (GitHub, Inc.):</strong> The web pages are hosted on GitHub Pages. As standard practice for a hosting service, GitHub's servers may log technical connection information such as visitors' IP addresses and browser types. Such logs are generated and kept by GitHub in its own capacity as the hosting provider, not collected or held by the developer, and are governed by GitHub's privacy statement: <a href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">https://docs.github.com/site-policy/privacy-policies/github-privacy-statement</a>.</li>
 </ul>
 
 <h2>9. Minors and Users Under Guardianship</h2>
-<p>The Service targets users aged 65 and above, some of whom may use it with the assistance of family members, caregivers, or volunteers due to cognitive, visual, or mobility limitations. Where a third party operates the Service on a user's behalf — including completing the planned sign-in process — that is treated as the user's own action; the developer cannot and does not verify the actual operator's identity.</p>
-<p>The Service does not specifically target users under 18. If a guardian discovers a minor has used the Service and provided personal data without consent, please notify the developer using the contact details below, and we will assist per the rights described in Section 6.</p>
+<p>The Service is intended for people aged 65 and above. Some users may operate it with help from family members, caregivers, or volunteers because of cognitive, visual, or motor limitations. Actions performed by a helper on a user's behalf (including completing the sign-in) are treated as the user's own actions; the developer cannot and does not verify who is actually operating the device.</p>
+<p>The Service is not specifically aimed at users under 18. If a guardian finds that a minor has used the Service and provided personal data without consent, please notify the developer using the contact details below, and the request will be handled as described in Section 6.</p>
 
 <h2>10. Policy Revisions</h2>
 <p>The developer reserves the right to revise this policy at any time; revisions will update the "Last updated" date at the top of this page.</p>
-<p>If the Service later adds server-side sync features (e.g. a planned caregiver dashboard for viewing a learner's progress), that constitutes a material change in the purpose and manner of data use. The developer will update this policy before such a feature goes live and re-notify users prominently, and may need to obtain renewed consent at that time.</p>
+<p>If the Service later adds a leaderboard (showing other users' names and points at a workshop), a family/caregiver dashboard, or similar features, that is a material change in how data is used; the developer will update this policy before such a feature launches, notify users prominently, and obtain consent again.</p>
 
 <h2>11. Contact</h2>
 <p>

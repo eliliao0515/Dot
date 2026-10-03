@@ -29,6 +29,8 @@ jobs:
         env:
           # 開發者名單：userId 的 SHA-256，逗號分隔。值放在 repo 的 Secret，見 specs/v2/P2-sandbox.md。
           EXPO_PUBLIC_DEV_USER_HASHES: ${{ secrets.DEV_USER_HASHES }}
+          # 點數伺服器網址（server/README.md 部署後拿到）。沒設定就只存在使用者手機上。網址是公開的，用 variable 不用 secret。
+          EXPO_PUBLIC_POINTS_API: ${{ vars.POINTS_API_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
