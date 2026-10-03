@@ -95,3 +95,52 @@ export type PracticeQuestion = {
   scenario: StageScript;
   target: Target;
 };
+
+/* ------------------------------------------------------------------ */
+/* v2 課本架構（specs/v2/00-overview.md §7.1）                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 課本目錄列表左邊的圖示。只用 src/ui/Icons.tsx 裡自己畫的通用圖案，
+ * 跟 ChatRoomAvatarGlyph 一樣是內容資料，畫成什麼由外殼決定。
+ */
+export type LevelGlyph =
+  | 'chat'
+  | 'sticker'
+  | 'mic'
+  | 'camera'
+  | 'video'
+  | 'back'
+  | 'search'
+  | 'plus'
+  | 'share'
+  | 'trash'
+  | 'menu'
+  | 'touch';
+
+type LevelBase = {
+  id: string;
+  title: string;
+  subtitle: string;
+  glyph: LevelGlyph;
+};
+
+/**
+ * 課本裡的一關。
+ *  - scenario：v1 的 Lesson 原封不動掛進來，關卡 id 等於 lessonId，舊進度不用搬
+ *  - practice：v1 的綜合練習
+ *  - comingSoon：還沒做的關卡。照樣列出、照樣能點，點了給說明 —— 不鎖關卡
+ * symbol／gesture 兩種會在 Phase 3／4 加進來。
+ */
+export type Level =
+  | (LevelBase & { kind: 'scenario'; lessonId: string })
+  | (LevelBase & { kind: 'practice' })
+  | (LevelBase & { kind: 'comingSoon' });
+
+/** 課本的一個單元。levelIds 的順序就是推薦順序，不是解鎖順序。 */
+export type Unit = {
+  id: string;
+  title: string;
+  summary: string;
+  levelIds: string[];
+};
