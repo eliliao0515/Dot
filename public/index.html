@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!--
+      maximum-scale=1 / user-scalable=no：頁面不能被手指縮放，點輸入框時 iOS 也不會自動放大。
+      interactive-widget=resizes-visual：Android Chrome 跟 iOS 一樣，鍵盤只縮小「看得到的範圍」，
+      不改版面尺寸 —— 兩邊都交給 src/ui/KeyboardViewport.web.tsx 用同一套方法把畫面對齊鍵盤頂部。
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual"
+    />
+    <title>Dot</title>
+    <style id="expo-reset">
+      /*
+        整個頁面釘死不動：不能捲、不能被拖、不能回彈。
+        真正會動的只有 App 自己裡面的捲動區（聊天紀錄、課本列表）。
+      */
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      body {
+        position: fixed;
+        inset: 0;
+        /* 去掉雙擊放大，點擊也不會有 300ms 延遲。 */
+        touch-action: manipulation;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>這個 App 需要開啟 JavaScript 才能使用。</noscript>
+    <div id="root"></div>
+  </body>
+</html>

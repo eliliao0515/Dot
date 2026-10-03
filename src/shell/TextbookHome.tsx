@@ -42,6 +42,7 @@ export default function TextbookHome({
   statusOf,
   resume,
   onOpenLevel,
+  onOpenSandbox,
 }: {
   units: Unit[];
   levels: Record<string, Level>;
@@ -49,6 +50,8 @@ export default function TextbookHome({
   /** 最上方那顆大按鈕。沒有可以接的課就是 null。 */
   resume: { label: string; levelId: string } | null;
   onOpenLevel: (level: Level) => void;
+  /** 只有開發者才會給。給了，最上方就多一個「我的沙盒」區塊。 */
+  onOpenSandbox?: () => void;
 }) {
   const [soonLevel, setSoonLevel] = useState<Level | null>(null);
 
@@ -62,11 +65,22 @@ export default function TextbookHome({
       <GroupedList>
         <NavHeader title="課本" />
 
+        {onOpenSandbox ? (
+          <Section header="我的沙盒" footer="只有你的帳號看得到。">
+            <ListRow
+              icon={<LevelIcon glyph="chat" />}
+              title="LINE 自由操作"
+              subtitle="沒有題目，什麼都可以按"
+              onPress={onOpenSandbox}
+            />
+          </Section>
+        ) : null}
+
         {resume ? (
           <PrimaryButton
             label={resume.label}
             onPress={() => open(levels[resume.levelId])}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: onOpenSandbox ? 20 : 8 }}
           />
         ) : null}
 

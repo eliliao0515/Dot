@@ -9,3 +9,6 @@ line_chats.png
 voice.png
 clicked_voice.png
 info.jpg
+
+# 本機環境變數（例如開發者雜湊名單）
+.env*.local

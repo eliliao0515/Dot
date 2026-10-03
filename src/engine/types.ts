@@ -17,7 +17,8 @@ export type StickerId = 'thumbsUp' | 'heart' | 'laugh' | 'bow' | 'ok';
 
 export type Bubble =
   | { id: string; from: 'them' | 'me'; kind: 'text'; text: string; showName?: boolean }
-  | { id: string; from: 'them' | 'me'; kind: 'photo'; label: string; showName?: boolean }
+  /** uri 是使用者自己從手機相簿選、或用相機拍的照片（只存在這支手機的記憶體裡）；沒有 uri 就畫假照片。 */
+  | { id: string; from: 'them' | 'me'; kind: 'photo'; label: string; uri?: string; showName?: boolean }
   | { id: string; from: 'them' | 'me'; kind: 'voice'; seconds: number; showName?: boolean }
   | { id: string; from: 'them'; kind: 'link'; text: string; url: string; showName?: boolean }
   | { id: string; from: 'them' | 'me'; kind: 'sticker'; sticker: StickerId; showName?: boolean }

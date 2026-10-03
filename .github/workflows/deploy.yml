@@ -26,6 +26,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run export
+        env:
+          # 開發者名單：userId 的 SHA-256，逗號分隔。值放在 repo 的 Secret，見 specs/v2/P2-sandbox.md。
+          EXPO_PUBLIC_DEV_USER_HASHES: ${{ secrets.DEV_USER_HASHES }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

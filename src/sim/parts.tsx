@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, Platform, TextInput } from 'react-native';
+import { View, Pressable, StyleSheet, Platform, TextInput, Image } from 'react-native';
 import { T } from '../ui/Scale';
 import { C, fz, textBase } from '../ui/theme';
 import {
-  Back, Mic, Play, Pause, VideoCam, Menu, Smile, Send,
-  ThumbsUp, Heart, Laugh, Ok, Flower, Camera, Person,
+  Back, Mic, MicOutline, Plus, Play, Pause, VideoCam, Menu, Smile, Send,
+  ThumbsUp, Heart, Laugh, Ok, Flower, Camera, Album, Person,
 } from '../ui/Icons';
 import { Bubble, StickerId } from '../engine/types';
 
@@ -43,24 +43,19 @@ function formatDuration(totalSeconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-const QUICK_REPLIES = ['好', '謝謝', '知道了', '等一下'];
-const SAMPLE_PHOTOS = [
-  { id: 'p1', label: '今天的菜' },
-  { id: 'p2', label: '孫子的照片' },
-  { id: 'p3', label: '客廳' },
-  { id: 'p4', label: '公園' },
-];
 const SAMPLE_CONTACTS = ['陳醫師', '里長', '大兒子', '孫子小宇'];
 
-export function SimTopBar({ contact, base, onWrongTap, onPressVideo }: {
+export function SimTopBar({ contact, base, onWrongTap, onPressBack, onPressVideo }: {
   contact: string;
   base: number;
   onWrongTap: () => void;
+  /** 給了就是真的返回；沒給就跟選單鍵一樣當作按錯。 */
+  onPressBack?: () => void;
   onPressVideo: () => void;
 }) {
   return (
     <View style={s.topBar}>
-      <Pressable onPress={onWrongTap} hitSlop={8}>
+      <Pressable onPress={onPressBack ?? onWrongTap} hitSlop={8}>
         <Back size={fz(base, 1.5)} />
       </Pressable>
       <T style={[s.contact, { fontSize: fz(base, 1), lineHeight: fz(base, 1.4) }]}>{contact}</T>
@@ -88,12 +83,20 @@ function Waveform({ heights, color }: { heights: number[]; color: string }) {
 
 const WAVE = [5, 11, 15, 8, 13, 6, 10, 14, 7, 4];
 
-function PhotoThumb({ label, size, base, onPress }: {
+function PhotoThumb({ label, uri, size, base, onPress }: {
   label: string;
+  uri?: string;
   size: 'bubble' | 'grid';
   base: number;
   onPress?: () => void;
 }) {
+  if (uri) {
+    return (
+      <Pressable onPress={onPress} style={[size === 'bubble' ? s.photo : s.photoGridThumb, s.photoReal]}>
+        <Image source={{ uri }} style={s.photoImage} resizeMode="cover" accessibilityLabel={label} />
+      </Pressable>
+    );
+  }
   return (
     <Pressable
       onPress={onPress}
@@ -124,7 +127,7 @@ export function MessageRow({
   playingId?: string | null;
   playElapsed?: number;
   onTogglePlay?: (id: string, seconds: number) => void;
-  onOpenPhoto?: (label: string) => void;
+  onOpenPhoto?: (label: string, uri?: string) => void;
 }) {
   const mine = msg.from === 'me';
   const playing = playingId === msg.id;
@@ -149,9 +152,10 @@ export function MessageRow({
       ) : msg.kind === 'photo' ? (
         <PhotoThumb
           label={msg.label}
+          uri={msg.uri}
           size="bubble"
           base={base}
-          onPress={() => onOpenPhoto?.(msg.label)}
+          onPress={() => onOpenPhoto?.(msg.label, msg.uri)}
         />
       ) : msg.kind === 'contact' ? (
         <View style={[s.bubble, s.contactBubble, mine && s.bubbleMine]}>
@@ -226,36 +230,15 @@ export function SavedPhotoToast({ base }: { base: number }) {
   );
 }
 
-/** 預設回覆膠囊列。取代真正打字 — 這個族群注音/拼音是完全的牆。 */
-export function QuickReplyRow({ base, onPick }: {
-  base: number;
-  onPick: (text: string) => void;
-}) {
-  return (
-    <View style={s.quickReplyRow}>
-      {QUICK_REPLIES.map((text) => (
-        <Pressable key={text} onPress={() => onPick(text)} style={s.quickReplyChip}>
-          <T style={[s.quickReplyText, { fontSize: fz(base, 0.85) }]}>{text}</T>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
 
 /** 「＋」的附加選單：照片、聯絡人。 */
-export function AttachMenu({ base, onSelectPhoto, onSelectContact }: {
+/** ＋選單。照片和相機已經直接放在輸入列上（跟真的 LINE 一樣），這裡不再重複。 */
+export function AttachMenu({ base, onSelectContact }: {
   base: number;
-  onSelectPhoto: () => void;
   onSelectContact: () => void;
 }) {
   return (
     <View style={s.attachMenu}>
-      <Pressable style={s.attachTile} onPress={onSelectPhoto}>
-        <View style={s.attachIconWrap}>
-          <Camera size={fz(base, 1.3)} color={C.ink2} />
-        </View>
-        <T style={[s.attachLabel, { fontSize: fz(base, 0.8) }]}>照片</T>
-      </Pressable>
       <Pressable style={s.attachTile} onPress={onSelectContact}>
         <View style={s.attachIconWrap}>
           <Person size={fz(base, 1.3)} color={C.ink2} />
@@ -266,27 +249,6 @@ export function AttachMenu({ base, onSelectPhoto, onSelectContact }: {
   );
 }
 
-export function PhotoPicker({ base, onPick, onCancel }: {
-  base: number;
-  onPick: (label: string) => void;
-  onCancel: () => void;
-}) {
-  return (
-    <View style={s.pickerWrap}>
-      <View style={s.pickerHead}>
-        <T style={[s.pickerTitle, { fontSize: fz(base, 0.9) }]}>選一張照片</T>
-        <Pressable onPress={onCancel} hitSlop={10}>
-          <T style={[s.pickerCancel, { fontSize: fz(base, 0.85) }]}>取消</T>
-        </Pressable>
-      </View>
-      <View style={s.photoGrid}>
-        {SAMPLE_PHOTOS.map((p) => (
-          <PhotoThumb key={p.id} label={p.label} size="grid" base={base} onPress={() => onPick(p.label)} />
-        ))}
-      </View>
-    </View>
-  );
-}
 
 export function ContactPicker({ base, onPick, onCancel }: {
   base: number;
@@ -334,12 +296,114 @@ export function StickerPanel({ base, onPick }: {
   );
 }
 
+/**
+ * 輸入列的尺寸。照真的 LINE（iPhone、390pt 寬）截圖量出來的，以標準字級為基準，
+ * 全部跟著 base 等比例縮放 —— 按鈕大小和間距的比例永遠固定，跟真手機一致。
+ *
+ *   ＋  相機  照片  [ Aa ············ ☺ ]  🎤
+ *   14 20 17.5 20 20.5 20 19 [  輸入框 34 高  ] 14 15 18
+ *
+ * 錄音面板頂部那一列也用同一組數字（InputBarRow），按下麥克風時那一列才不會跳。
+ * 教學疊層的紅圈也從這裡算位置，改這裡就會一起跟著動。
+ */
+export function inputBarMetrics(base: number) {
+  const k = base / 16;
+  const m = {
+    padL: 14 * k,
+    padR: 18 * k,
+    padV: 8 * k,
+    iconSlot: 20 * k,
+    gapPlusCamera: 17.5 * k,
+    gapCameraAlbum: 20.5 * k,
+    gapAlbumField: 19 * k,
+    gapFieldRight: 14 * k,
+    fieldH: 34 * k,
+    fieldPadL: 15 * k,
+    fieldPadR: 8 * k,
+    fontSize: 17 * k,
+    smileSize: 19 * k,
+    rightSlot: 15 * k,
+    micSize: 28 * k,
+    stroke: 1.8 * k,
+  };
+  return {
+    ...m,
+    barH: m.fieldH + m.padV * 2,
+    /** 輸入框左緣到畫面左緣的距離。 */
+    fieldLeft: m.padL + m.iconSlot * 3 + m.gapPlusCamera + m.gapCameraAlbum + m.gapAlbumField,
+    /** 輸入框右緣到畫面右緣的距離。 */
+    fieldRightInset: m.padR + m.rightSlot + m.gapFieldRight,
+  };
+}
+
+const BAR_ICON = '#1C1C1E';
+
+/**
+ * 輸入列的骨架：左邊＋、相機、照片，中間輸入框，右邊一個位置（麥克風／送出／關閉）。
+ * 一般輸入列和錄音面板頂部共用，兩者尺寸保證一模一樣。
+ */
+export function InputBarRow({
+  base,
+  field,
+  right,
+  onPressPlus,
+  onPressCamera,
+  onPressAlbum,
+  plusActive = false,
+}: {
+  base: number;
+  field: React.ReactNode;
+  right: React.ReactNode;
+  onPressPlus: () => void;
+  onPressCamera: () => void;
+  onPressAlbum: () => void;
+  plusActive?: boolean;
+}) {
+  const m = inputBarMetrics(base);
+  const slot = { width: m.iconSlot, height: m.fieldH, alignItems: 'center' as const, justifyContent: 'center' as const };
+  return (
+    <View style={[s.inputBar, { paddingLeft: m.padL, paddingRight: m.padR, paddingVertical: m.padV }]}>
+      <Pressable onPress={onPressPlus} hitSlop={8} style={slot} accessibilityLabel="更多">
+        <Plus size={m.iconSlot / 0.7} color={plusActive ? C.chatGreen : BAR_ICON} weight={m.stroke} />
+      </Pressable>
+      {/* 從左到右：＋、相機、照片，跟真的 LINE 一樣直接放在輸入框左邊，不用先按＋。 */}
+      <Pressable onPress={onPressCamera} hitSlop={8} style={[slot, { marginLeft: m.gapPlusCamera }]} accessibilityLabel="相機">
+        <Camera size={m.iconSlot / 0.78} color={BAR_ICON} weight={m.stroke} />
+      </Pressable>
+      <Pressable onPress={onPressAlbum} hitSlop={8} style={[slot, { marginLeft: m.gapCameraAlbum }]} accessibilityLabel="照片">
+        <Album size={m.iconSlot / 0.82} color={BAR_ICON} weight={m.stroke} />
+      </Pressable>
+
+      <View
+        style={[
+          s.field,
+          {
+            marginLeft: m.gapAlbumField,
+            height: m.fieldH,
+            borderRadius: m.fieldH / 2,
+            paddingLeft: m.fieldPadL,
+            paddingRight: m.fieldPadR,
+          },
+        ]}
+      >
+        {field}
+      </View>
+
+      <View style={{ marginLeft: m.gapFieldRight, width: m.rightSlot, height: m.fieldH, alignItems: 'center', justifyContent: 'center' }}>
+        {right}
+      </View>
+    </View>
+  );
+}
+
 export function SimInputBar({
   base,
   draftText,
   onChangeDraftText,
   onSendDraftText,
   onPressPlus,
+  onPressCamera,
+  onPressAlbum,
   onPressSticker,
   onPressMic,
   attachOpen,
@@ -350,48 +414,56 @@ export function SimInputBar({
   onChangeDraftText: (text: string) => void;
   onSendDraftText: () => void;
   onPressPlus: () => void;
+  onPressCamera: () => void;
+  onPressAlbum: () => void;
   onPressSticker: () => void;
   onPressMic: () => void;
   attachOpen: boolean;
   stickerOpen: boolean;
 }) {
-  const micSize = fz(base, 2.4);
+  const m = inputBarMetrics(base);
   const hasDraft = draftText.length > 0;
   return (
-    <View style={s.inputBar}>
-      <Pressable onPress={onPressPlus} hitSlop={10} style={[s.roundIcon, attachOpen && s.roundIconOn]}>
-        <T style={[s.plus, { fontSize: fz(base, 1.35) }]}>＋</T>
-      </Pressable>
-
-      <TextInput
-        value={draftText}
-        onChangeText={onChangeDraftText}
-        placeholder="輸入訊息"
-        placeholderTextColor="#98A0A6"
-        allowFontScaling={false}
-        returnKeyType="send"
-        onSubmitEditing={onSendDraftText}
-        style={[textBase, s.field, { fontSize: fz(base, 0.88), lineHeight: fz(base, 1.3), color: C.ink }]}
-      />
-
-      <Pressable onPress={onPressSticker} hitSlop={10} style={[s.roundIcon, stickerOpen && s.roundIconOn]}>
-        <Smile size={fz(base, 1.15)} color="#6B747A" weight={2.2} />
-      </Pressable>
-
-      <Pressable
-        onPress={hasDraft ? onSendDraftText : onPressMic}
-        // 手抖的人常按不準，把觸控範圍放寬 — 手勢從長按改成點一下，這件事不受影響。
-        hitSlop={14}
-        pressRetentionOffset={{ top: 60, bottom: 60, left: 60, right: 60 }}
-        style={({ pressed }) => [
-          s.mic,
-          { width: micSize, height: micSize, borderRadius: micSize / 2 },
-          pressed && s.micActive,
-        ]}
-      >
-        {hasDraft ? <Send size={fz(base, 1.2)} color="#fff" /> : <Mic size={fz(base, 1.2)} />}
-      </Pressable>
-    </View>
+    <InputBarRow
+      base={base}
+      onPressPlus={onPressPlus}
+      onPressCamera={onPressCamera}
+      onPressAlbum={onPressAlbum}
+      plusActive={attachOpen}
+      field={
+        <>
+          <TextInput
+            value={draftText}
+            onChangeText={onChangeDraftText}
+            placeholder="Aa"
+            placeholderTextColor="#B4B4B8"
+            allowFontScaling={false}
+            returnKeyType="send"
+            onSubmitEditing={onSendDraftText}
+            style={[textBase, s.fieldInput, { fontSize: m.fontSize, lineHeight: m.fontSize * 1.3, color: C.ink }]}
+          />
+          <Pressable onPress={onPressSticker} hitSlop={8} accessibilityLabel="貼圖">
+            <Smile size={m.smileSize} color={stickerOpen ? C.chatGreen : '#8E8E93'} weight={m.stroke * 0.85} />
+          </Pressable>
+        </>
+      }
+      right={
+        <Pressable
+          onPress={hasDraft ? onSendDraftText : onPressMic}
+          // 手抖的人常按不準，把觸控範圍放寬；畫面上的圖示大小照真 LINE，不放大。
+          hitSlop={14}
+          pressRetentionOffset={{ top: 60, bottom: 60, left: 60, right: 60 }}
+          style={({ pressed }) => [s.micSlot, pressed && { opacity: 0.6 }]}
+          accessibilityLabel={hasDraft ? '傳送' : '語音訊息'}
+        >
+          {hasDraft ? (
+            <Send size={m.micSize * 0.85} color={C.chatGreen} />
+          ) : (
+            <MicOutline size={m.micSize} color={BAR_ICON} weight={m.stroke} />
+          )}
+        </Pressable>
+      }
+    />
   );
 }
 
@@ -434,6 +506,8 @@ const s = StyleSheet.create({
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
+  photoReal: { backgroundColor: '#000', overflow: 'hidden' },
+  photoImage: { width: '100%', height: '100%' },
   photoGridThumb: {
     width: 130,
     height: 98,
@@ -493,24 +567,6 @@ const s = StyleSheet.create({
   },
   savedToastText: { color: '#fff', fontWeight: '700' },
 
-  quickReplyRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 4,
-    backgroundColor: C.chatBar,
-  },
-  quickReplyChip: {
-    borderWidth: 1.5,
-    borderColor: C.chatLine,
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  quickReplyText: { color: C.ink2, fontWeight: '600' },
 
   attachMenu: {
     flexDirection: 'row',
@@ -569,27 +625,22 @@ const s = StyleSheet.create({
   stickerTile: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center' },
 
   inputBar: {
-    backgroundColor: C.chatBar,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: C.chatLine,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
   },
-  plus: { color: '#6B747A', fontWeight: '500' },
-  roundIcon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  roundIconOn: { backgroundColor: 'rgba(18,183,106,0.16)' },
   field: {
     flex: 1,
-    backgroundColor: '#fff',
+    // 網頁上的 <input> 有自己的預設寬度，不設 minWidth:0 會把右邊的麥克風擠出畫面。
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F7',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: C.chatLine,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 13,
+    borderColor: '#D9D9DE',
   },
-  mic: { backgroundColor: C.chatGreen, alignItems: 'center', justifyContent: 'center' },
-  micActive: { backgroundColor: '#0E9A59' },
+  fieldInput: { flex: 1, minWidth: 0, paddingVertical: 0 },
+  micSlot: { alignItems: 'center', justifyContent: 'center' },
 });

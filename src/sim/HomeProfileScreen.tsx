@@ -19,10 +19,13 @@ export default function HomeProfileScreen({
   user,
   base,
   onLogout,
+  actionLabel = '登出',
 }: {
   user: LineUser;
   base: number;
   onLogout: () => void;
+  /** 底部按鈕的字。沙盒裡借這顆按鈕當作「離開沙盒」。 */
+  actionLabel?: string;
 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const showFallback = !user.pictureUrl || imgFailed;
@@ -57,7 +60,7 @@ export default function HomeProfileScreen({
           style={({ pressed }) => [s.logoutBtn, pressed && s.logoutBtnPressed]}
           accessibilityRole="button"
         >
-          <T style={[s.logoutText, { fontSize: fz(base, 1.05), lineHeight: fz(base, 1.5) }]}>登出</T>
+          <T style={[s.logoutText, { fontSize: fz(base, 1.05), lineHeight: fz(base, 1.5) }]}>{actionLabel}</T>
         </Pressable>
       </View>
     </View>

@@ -1068,7 +1068,11 @@ export function DownloadTray({ size = 24, color = '#fff', weight = 2 }) {
 }
 
 /** 傳送，紙飛機（單色實心三角形）。 */
-export function Send({ size = 24, color = '#4C6FE8' }) {
+/**
+ * 送出（紙飛機）。cutColor 給了，就在三角形左半邊切一道橫線（顏色同底色），
+ * 看起來才像紙飛機而不是播放鍵 —— 錄音面板裡兩者會並排出現，不能長得一樣。
+ */
+export function Send({ size = 24, color = '#4C6FE8', cutColor }: { size?: number; color?: string; cutColor?: string }) {
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <View
@@ -1084,6 +1088,81 @@ export function Send({ size = 24, color = '#4C6FE8' }) {
           marginLeft: size * 0.12,
         }}
       />
+      {cutColor ? (
+        <View
+          style={{
+            position: 'absolute',
+            left: size * 0.12 + size * 0.06,
+            top: size / 2 - Math.max(1.5, size * 0.04),
+            width: size * 0.3,
+            height: Math.max(3, size * 0.08),
+            backgroundColor: cutColor,
+            borderRadius: size * 0.04,
+          }}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+/** 往右的箭頭（橫線＋箭頭），拍照預覽畫面的送出鍵用。 */
+export function ArrowRight({ size = 24, color = '#4C6FE8', weight = 2.6 }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          position: 'absolute',
+          width: size * 0.66,
+          height: weight,
+          backgroundColor: color,
+          borderRadius: weight / 2,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          right: size * 0.16,
+          width: size * 0.36,
+          height: size * 0.36,
+          borderRightWidth: weight,
+          borderTopWidth: weight,
+          borderColor: color,
+          transform: [{ rotate: '45deg' }],
+        }}
+      />
+    </View>
+  );
+}
+
+/** 線條版麥克風（膠囊外框＋底座弧線＋短柄），真的 LINE 輸入列右邊那一顆。 */
+export function MicOutline({ size = 28, color = '#1C1C1E', weight = 1.8 }) {
+  const capW = size * 0.3;
+  const capH = size * 0.5;
+  return (
+    <View style={{ width: size * 0.56, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          width: capW,
+          height: capH,
+          borderRadius: capW / 2,
+          borderWidth: weight,
+          borderColor: color,
+        }}
+      />
+      <View
+        style={{
+          marginTop: -capH * 0.42,
+          width: size * 0.52,
+          height: size * 0.3,
+          borderLeftWidth: weight,
+          borderRightWidth: weight,
+          borderBottomWidth: weight,
+          borderColor: color,
+          borderBottomLeftRadius: size * 0.26,
+          borderBottomRightRadius: size * 0.26,
+        }}
+      />
+      <View style={{ width: weight, height: size * 0.12, backgroundColor: color }} />
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, SafeAreaView, Pressable, StyleSheet } from 'react-native';
+import { View, SafeAreaView, Pressable, StyleSheet, Image } from 'react-native';
 import { T, useScale } from '../ui/Scale';
 import { fz } from '../ui/theme';
 import { CloseX, ScanFrame, GridThumb, Smile, Pen, Trash, ShareUp, DownloadTray } from '../ui/Icons';
@@ -43,6 +43,7 @@ function useNeutralToast() {
 
 export default function PhotoViewer({
   photoLabel,
+  photoUri,
   contactName,
   timestamp,
   onClose,
@@ -52,6 +53,8 @@ export default function PhotoViewer({
   onDraw,
 }: {
   photoLabel: string;
+  /** 使用者自己選或拍的真照片。沒有就畫假照片。 */
+  photoUri?: string;
   contactName: string;
   timestamp: string;
   onClose: () => void;
@@ -89,9 +92,13 @@ export default function PhotoViewer({
         </View>
       </View>
 
-      <View style={[s.photoArea, { backgroundColor: colorFromLabel(photoLabel) }]}>
-        <T style={[s.photoLabel, { fontSize: fz(base, 1.1), lineHeight: fz(base, 1.6) }]}>{photoLabel}</T>
-      </View>
+      {photoUri ? (
+        <Image source={{ uri: photoUri }} style={s.photoReal} resizeMode="contain" />
+      ) : (
+        <View style={[s.photoArea, { backgroundColor: colorFromLabel(photoLabel) }]}>
+          <T style={[s.photoLabel, { fontSize: fz(base, 1.1), lineHeight: fz(base, 1.6) }]}>{photoLabel}</T>
+        </View>
+      )}
 
       {msg ? (
         <View style={s.toast} pointerEvents="none">
@@ -148,6 +155,7 @@ const s = StyleSheet.create({
   topIcons: { flexDirection: 'row', alignItems: 'center', gap: 14 },
 
   photoArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  photoReal: { flex: 1, width: '100%' },
   photoLabel: { color: 'rgba(255,255,255,0.85)', fontWeight: '700' },
 
   toast: {

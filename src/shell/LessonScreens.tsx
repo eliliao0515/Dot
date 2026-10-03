@@ -49,7 +49,7 @@ export function RealDeviceScreen({ lesson, onConfirm, onLater }: {
 
 /**
  * 打勾圖示的一次性進場動畫：掉下來＋閃一下，慶祝完成。
- * 尊重 AccessibilityInfo.isReduceMotionEnabled()（比照 ChatSim 的 GuideRing）—
+ * 尊重 AccessibilityInfo.isReduceMotionEnabled()（比照 ScenarioRunner 的 GuideRing）—
  * 開了「減少動態效果」就直接顯示最終靜止狀態，不播動畫。
  * 動畫只影響這個圖示本身，不會擋住或延遲下面「繼續」按鈕的可點性。
  */

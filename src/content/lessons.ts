@@ -160,7 +160,7 @@ export const readReplyLesson: Lesson = {
   id: 'read-reply',
   eyebrow: '第 1 課 · 看訊息、回訊息',
   title: '美惠約你禮拜三去買菜',
-  why: '不知道要打什麼字沒關係，看訊息下面幾個現成的話，點一個就能回她。',
+  why: '收到訊息，點一下下面的輸入框，打幾個字就能回她。',
   skillName: '看訊息、回訊息',
   target: { node: 'reply', gesture: 'tap', minMs: 0 },
   stages: [
@@ -170,7 +170,7 @@ export const readReplyLesson: Lesson = {
       messages: [
         { id: 'g1', from: 'them', kind: 'text', text: '禮拜三要不要一起去買菜？早上九點市場門口見', showName: true },
       ],
-      coach: '看下面幾個現成的話，點一個回她就好',
+      coach: '點一下下面白色的框框，打幾個字，再按右邊綠色的鍵送出',
       note: '按錯不會怎麼樣，慢慢來。',
     },
     {
@@ -187,16 +187,16 @@ export const readReplyLesson: Lesson = {
       messages: [
         { id: 't1', from: 'them', kind: 'text', text: '新的一年，要不要來我家吃飯？', showName: true },
       ],
-      note: '換一個人。看訊息，點一個現成的話回她。',
+      note: '換一個人。看訊息，打幾個字回她。',
     },
   ],
   realDevice: {
     headline: '現在，換你自己的手機',
-    steps: ['關掉這個練習 App', '打開你平常在用的通訊軟體', '找一則別人傳的訊息', '點下面現成的話回他', '傳出去了就回來這裡'],
+    steps: ['關掉這個練習 App', '打開你平常在用的通訊軟體', '找一則別人傳的訊息', '點下面的輸入框，打幾個字', '按送出，傳出去了就回來這裡'],
   },
   done: {
     headline: '你會看訊息回訊息了',
-    body: '以後收到訊息，看下面現成的話，點一個回就好，不用打字。',
+    body: '以後收到訊息，點下面的輸入框打字，再按送出就能回了。',
     shareWith: '美惠',
   },
 };

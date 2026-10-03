@@ -5,12 +5,12 @@ import { C, fz } from '../ui/theme';
 import { Check } from '../ui/Icons';
 import { Lesson, PracticeQuestion } from '../engine/types';
 import { PRACTICE_QUESTIONS } from '../content/practice';
-import ChatSim from '../sim/ChatSim';
+import ScenarioRunner from './ScenarioRunner';
 import BigButton from './BigButton';
 
 /**
  * 「綜合練習」的教學外殼：靛藍色系，包住開場說明／進度／完成畫面。
- * 實際聊天畫面完全沿用既有 ChatSim（綠色系），這裡不重做一份聊天介面。
+ * 實際聊天畫面完全沿用 ScenarioRunner（綠色的 LINE 畫面加教學疊層），這裡不重做一份聊天介面。
  * 跟正式課程的三段鷹架無關，不用 guided/solo/transfer 那套字樣。
  */
 
@@ -25,7 +25,7 @@ function pickRandomQuestions(pool: PracticeQuestion[], count: number): PracticeQ
   return shuffled.slice(0, count);
 }
 
-/** 把一題組成 ChatSim 需要的 Lesson 形狀。用不到的欄位放合理預設值，這個模式不會顯示那些畫面。 */
+/** 把一題組成 ScenarioRunner 需要的 Lesson 形狀。用不到的欄位放合理預設值，這個模式不會顯示那些畫面。 */
 function toLesson(q: PracticeQuestion): Lesson {
   return {
     id: q.id,
@@ -69,7 +69,7 @@ export default function PracticeSession({ onExit }: { onExit: () => void }) {
         <ScrollView contentContainerStyle={s.body}>
           <Pressable onPress={onExit} hitSlop={12}>
             <T systemScaling style={[s.back, { fontSize: fz(base, 0.88), lineHeight: fz(base, 1.4) }]}>
-              ‹ 回到聊天列表
+              ‹ 回到課本
             </T>
           </Pressable>
 
@@ -104,7 +104,7 @@ export default function PracticeSession({ onExit }: { onExit: () => void }) {
         </ScrollView>
 
         <View style={s.footer}>
-          <BigButton label="回到聊天列表" onPress={onExit} />
+          <BigButton label="回到課本" onPress={onExit} />
         </View>
       </View>
     );
@@ -115,19 +115,13 @@ export default function PracticeSession({ onExit }: { onExit: () => void }) {
   const lesson = toLesson(question);
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={s.progress}>
-        <T systemScaling style={[s.progressText, { fontSize: fz(base, 0.78), lineHeight: fz(base, 1.3) }]}>
-          {`第 ${index + 1} 題．共 ${questions.length} 題`}
-        </T>
-        <Pressable onPress={onExit} hitSlop={14} accessibilityRole="button">
-          <T systemScaling style={[s.progressExit, { fontSize: fz(base, 0.78), lineHeight: fz(base, 1.3) }]}>
-            先離開
-          </T>
-        </Pressable>
-      </View>
-      <ChatSim key={question.id} lesson={lesson} script={lesson.stages[0]} onDone={handleQuestionDone} />
-    </View>
+    <ScenarioRunner
+      key={question.id}
+      lesson={lesson}
+      script={lesson.stages[0]}
+      onDone={handleQuestionDone}
+      onExit={onExit}
+    />
   );
 }
 
@@ -152,15 +146,4 @@ const s = StyleSheet.create({
     marginTop: 24,
     marginBottom: 12,
   },
-
-  progress: {
-    backgroundColor: C.indigoDark,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  progressText: { color: '#B9CEDC', fontWeight: '700', flex: 1 },
-  progressExit: { color: '#fff', fontWeight: '700', textDecorationLine: 'underline' },
 });

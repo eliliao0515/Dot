@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, SafeAreaView, StatusBar, Platform, Pressable, StyleSheet } from 'react-native';
+import { View, SafeAreaView, StatusBar, Platform, StyleSheet } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { ScaleProvider, T, useScale } from './src/ui/Scale';
 import { C, fz } from './src/ui/theme';
-import { Back, Person } from './src/ui/Icons';
+import { Person } from './src/ui/Icons';
 import { LESSONS } from './src/content/lessons';
 import { UNITS, LEVELS, RECOMMENDED_ORDER } from './src/content/curriculum';
 import type { Level } from './src/engine/types';
-import ChatSim from './src/sim/ChatSim';
+import ScenarioRunner from './src/shell/ScenarioRunner';
+import SandboxScreen from './src/shell/SandboxScreen';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
 import LoginGate from './src/shell/LoginGate';
@@ -16,8 +17,10 @@ import MeScreen from './src/shell/MeScreen';
 import TabBar from './src/ui/hig/TabBar';
 import { Book } from './src/ui/hig/glyphs';
 import { H } from './src/ui/hig/tokens';
+import KeyboardViewport from './src/ui/KeyboardViewport';
 import type { RowStatus } from './src/ui/hig/ListRow';
 import { initLineAuth, requestLineLogin, logout, type LineUser } from './src/auth/lineAuth';
+import { isDeveloper, sha256Hex } from './src/auth/devAccess';
 import {
   loadProgress,
   recordStageDone,
@@ -39,7 +42,8 @@ type StackRoute =
   | { name: 'sim'; lessonId: string; stageIndex: number }
   | { name: 'realDevice'; lessonId: string }
   | { name: 'done'; lessonId: string }
-  | { name: 'practice' };
+  | { name: 'practice' }
+  | { name: 'sandbox' };
 
 /**
  * 一關的狀態。scenario 關卡沿用 v1 的 nodeStateFor 判斷（關卡 id 等於 lessonId，
@@ -83,42 +87,11 @@ function resumeTarget(progress: Progress): { label: string; levelId: string } | 
  */
 function devLoginUser(): LineUser | null {
   if (!__DEV__ || Platform.OS !== 'web' || typeof window === 'undefined') return null;
-  if (new URLSearchParams(window.location.search).get('devlogin') !== '1') return null;
-  return { userId: 'dev-local', displayName: '開發測試' };
-}
-
-const STAGE_LABEL: Record<string, string> = {
-  guided: '帶著做',
-  solo: '自己做',
-  transfer: '真的做',
-};
-
-/**
- * 模擬畫面上方唯一的一條外框。
- * 用靛藍是刻意的 — 讓長輩隨時看得出「藍色是老師，綠色是要學的 App」。
- */
-function TeachingFrame({
-  stageIndex,
-  total,
-  stage,
-  onExit,
-}: {
-  stageIndex: number;
-  total: number;
-  stage: string;
-  onExit: () => void;
-}) {
-  const { base } = useScale();
-  return (
-    <View style={s.frame}>
-      <Pressable onPress={onExit} hitSlop={14} accessibilityRole="button">
-        <Back size={fz(base, 1.3)} color="#B9CEDC" />
-      </Pressable>
-      <T systemScaling style={[s.frameText, { fontSize: fz(base, 0.78), lineHeight: fz(base, 1.3) }]}>
-        {`練習 ${stageIndex + 1} / ${total}　${STAGE_LABEL[stage] ?? ''}`}
-      </T>
-    </View>
-  );
+  const mode = new URLSearchParams(window.location.search).get('devlogin');
+  // ?devlogin=1 是開發者（.env.local 放了 dev-local 的雜湊），?devlogin=guest 是一般學員。
+  if (mode === '1') return { userId: 'dev-local', displayName: '開發測試' };
+  if (mode === 'guest') return { userId: 'dev-guest', displayName: '一般學員' };
+  return null;
 }
 
 /**
@@ -130,12 +103,22 @@ function DebugBadge({ user }: { user: LineUser | null }) {
     Platform.OS === 'web' &&
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('debug') === '1';
+  // 顯示自己 userId 的雜湊，讓開發者複製去設定 GitHub Secret（DEV_USER_HASHES）。
+  const [hash, setHash] = useState<string | null>(null);
+  useEffect(() => {
+    if (on && user) sha256Hex(user.userId).then(setHash);
+  }, [on, user]);
   if (!on) return null;
   return (
     <View style={s.debug}>
       <T systemScaling style={s.debugText}>
         {user ? `LINE: ${user.displayName}` : 'LINE: \u533f\u540d\uff08\u672a\u53d6\u5f97\u8eab\u5206\uff09'}
       </T>
+      {hash ? (
+        <T systemScaling selectable style={s.debugText}>
+          {`dev hash: ${hash}`}
+        </T>
+      ) : null}
     </View>
   );
 }
@@ -146,6 +129,7 @@ function Root() {
   const [stack, setStack] = useState<StackRoute | null>(null);
   const [lineUser, setLineUser] = useState<LineUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [isDev, setIsDev] = useState(false);
   const [progress, setProgress] = useState<Progress>(EMPTY_PROGRESS);
 
   // 身分是加分項：拿不到就匿名繼續，畫面不等它 —— 這在原生端仍然成立。
@@ -159,6 +143,9 @@ function Root() {
       const user = liffUser ?? devLoginUser();
       setLineUser(user);
       setAuthChecked(true);
+      isDeveloper(user).then((dev) => {
+        if (alive) setIsDev(dev);
+      });
       loadProgress().then((p) => {
         if (alive) setProgress(p);
       });
@@ -207,20 +194,13 @@ function Root() {
       ) : stack ? (
         <>
           {stack.name === 'sim' && lesson ? (
-            <View style={{ flex: 1 }}>
-              <TeachingFrame
-                stageIndex={stack.stageIndex}
-                total={lesson.stages.length}
-                stage={lesson.stages[stack.stageIndex].stage}
-                onExit={() => setStack(null)}
-              />
-              <ChatSim
-                key={lesson.id}
-                lesson={lesson}
-                script={lesson.stages[stack.stageIndex]}
-                onDone={advance}
-              />
-            </View>
+            <ScenarioRunner
+              key={lesson.id}
+              lesson={lesson}
+              script={lesson.stages[stack.stageIndex]}
+              onDone={advance}
+              onExit={() => setStack(null)}
+            />
           ) : null}
 
           {stack.name === 'realDevice' && lesson ? (
@@ -240,6 +220,8 @@ function Root() {
           ) : null}
 
           {stack.name === 'practice' ? <PracticeSession onExit={() => setStack(null)} /> : null}
+
+          {stack.name === 'sandbox' ? <SandboxScreen user={lineUser} onExit={() => setStack(null)} /> : null}
         </>
       ) : (
         <View style={{ flex: 1, backgroundColor: H.bg }}>
@@ -251,6 +233,7 @@ function Root() {
                 statusOf={(level) => levelStatus(progress, level)}
                 resume={resumeTarget(progress)}
                 onOpenLevel={openLevel}
+                onOpenSandbox={isDev ? () => setStack({ name: 'sandbox' }) : undefined}
               />
             ) : null}
 
@@ -260,6 +243,7 @@ function Root() {
                 onLogout={() => {
                   logout();
                   setLineUser(null);
+                  setIsDev(false);
                   setActiveTab('textbook');
                 }}
               />
@@ -283,7 +267,9 @@ function Root() {
 export default function App() {
   return (
     <ScaleProvider>
-      <Root />
+      <KeyboardViewport>
+        <Root />
+      </KeyboardViewport>
     </ScaleProvider>
   );
 }
@@ -294,15 +280,6 @@ const s = StyleSheet.create({
     backgroundColor: C.paper,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight ?? 0 : 0,
   },
-  frame: {
-    backgroundColor: C.indigoDark,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  frameText: { color: '#B9CEDC', fontWeight: '700', flex: 1 },
   debug: { backgroundColor: '#3B2E00', paddingHorizontal: 12, paddingVertical: 4 },
   debugText: { color: '#FFD666', fontSize: 12, lineHeight: 16 },
 });
