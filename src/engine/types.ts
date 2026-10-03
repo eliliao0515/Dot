@@ -166,13 +166,14 @@ type LevelBase = {
  *  - scenario：v1 的 Lesson 原封不動掛進來，關卡 id 等於 lessonId，舊進度不用搬
  *  - practice：v1 的綜合練習
  *  - comingSoon：還沒做的關卡。照樣列出、照樣能點，點了給說明 —— 不鎖關卡
- * symbol／gesture 兩種會在 Phase 3／4 加進來。
+ *  - gesture：手勢單元的一關（specs/v2/P5-gestures.md），猜猜看，不走鷹架
  */
 export type Level =
   | (LevelBase & { kind: 'scenario'; lessonId: string })
   | (LevelBase & { kind: 'practice' })
   /** 符號選擇題（P4c）：每次隨機出題，答對得點數。 */
   | (LevelBase & { kind: 'symbolQuiz' })
+  | (LevelBase & { kind: 'gesture'; script: GestureLevelScript })
   | (LevelBase & { kind: 'comingSoon' });
 
 /** 課本的一個單元。levelIds 的順序就是推薦順序，不是解鎖順序。 */
@@ -181,4 +182,52 @@ export type Unit = {
   title: string;
   summary: string;
   levelIds: string[];
+};
+
+/* ------------------------------------------------------------------ */
+/* 手勢單元：猜猜看（specs/v2/P5-gestures.md）                           */
+/* ------------------------------------------------------------------ */
+
+/** 這一關要猜的手勢。P5a 只有從左邊緣往右滑，之後的小段再加。 */
+export type GestureKind = 'edgeSwipeBack';
+
+/** 判定門檻。實機上調這裡就好，不改程式。 */
+export type GestureThresholds = {
+  edgeSwipe: {
+    /** 手指要從左邊幾 px 以內開始。 */
+    edgePx: number;
+    /** 拖過畫面寬度的這個比例放開就算數。慢慢拖也算，不看速度。 */
+    minRatio: number;
+    /** 或是輕輕一撥：放開時的速度（px/ms）超過這個值。 */
+    flickVelocity: number;
+  };
+};
+
+/**
+ * 手勢單元的一題。沒有 stage，不走鷹架：給一件想做的事，讓長輩自己猜。
+ * 做了別的事照樣走得通，外殼只說一句中性的話（nudges）。
+ */
+export type GestureChallenge = {
+  id: string;
+  /** 任務卡：講想做的事，不講手勢名稱。 */
+  goal: string;
+  /** 一開始打開哪一個聊天室（LINE 模擬器分頁的聊天室 id），回到列表時看到的也是那份列表。 */
+  scene: { openRoomId: string };
+  /** 什麼事算猜對。back：用手勢回上一頁（邊緣滑或系統的上一頁），不是按左上角的返回鍵。 */
+  pass: { type: 'back' };
+  /** 做了別的事時說的話。backButton：按了左上角的返回鍵。 */
+  nudges: { backButton?: string };
+  /** 第一次按「給我提示」：只給方向。第二次固定是播示範動畫。 */
+  hint: string;
+  demo: GestureKind;
+  /** 猜對之後的「原來如此」。 */
+  aha: { gesture: string; meaning: string };
+};
+
+export type GestureLevelScript = {
+  gesture: GestureKind;
+  thresholds: GestureThresholds;
+  challenges: GestureChallenge[];
+  /** 最後一張卡：下次用手機時試試看。可以跳過，跳過的人分開統計。 */
+  realDevice: { headline: string; steps: string[] };
 };

@@ -24,6 +24,8 @@ import {
 } from './src/storage/points';
 import { RealDeviceScreen, DoneScreen } from './src/shell/LessonScreens';
 import PracticeSession from './src/shell/PracticeSession';
+import GestureChallengeRunner from './src/shell/GestureChallengeRunner';
+import GestureLab from './src/shell/GestureLab';
 import LoginGate from './src/shell/LoginGate';
 import TextbookHome from './src/shell/TextbookHome';
 import MeScreen from './src/shell/MeScreen';
@@ -56,6 +58,9 @@ type StackRoute =
   | { name: 'realDevice'; lessonId: string }
   | { name: 'done'; lessonId: string }
   | { name: 'practice' }
+  /** 手勢單元的一關：猜猜看，然後到真手機卡（specs/v2/P5-gestures.md）。 */
+  | { name: 'gesture'; levelId: string; startIndex: number }
+  | { name: 'gestureRealDevice'; levelId: string }
   /** 從「模擬器」分頁推進來的 LINE 模擬器，整個畫面就是 LINE。 */
   | { name: 'lineSim' }
   /** 符號選擇題 */
@@ -64,10 +69,17 @@ type StackRoute =
 /**
  * 一關的狀態。scenario 關卡沿用 v1 的 nodeStateFor 判斷（關卡 id 等於 lessonId，
  * 舊進度直接接得上）；綜合練習和還沒做的關卡沒有進度可言。
+ * gesture 關卡借用同一份進度格式：stagesDone 是猜對了幾題。
  */
 function levelStatus(progress: Progress, level: Level, quizRounds = 0): RowStatus {
   // 符號選擇題沒有「做到一半」：玩過一局就打勾，之後想玩幾次都可以。
   if (level.kind === 'symbolQuiz') return quizRounds > 0 ? 'done' : 'none';
+  if (level.kind === 'gesture') {
+    const lp = progress.lessons[level.id];
+    if (!lp) return 'none';
+    if (lp.realDeviceDone || lp.stagesDone >= level.script.challenges.length) return 'done';
+    return lp.stagesDone > 0 ? 'partial' : 'none';
+  }
   if (level.kind !== 'scenario') return 'none';
   const total = LESSONS[level.lessonId]?.stages.length ?? 0;
   const state = nodeStateFor(
@@ -94,7 +106,7 @@ function resumeTarget(progress: Progress): { label: string; levelId: string } | 
     return { label: `接著上次：${last.title}`, levelId: last.id };
   }
   const next = RECOMMENDED_ORDER.map((id) => LEVELS[id]).find(
-    (l) => l.kind === 'scenario' && levelStatus(progress, l) !== 'done',
+    (l) => (l.kind === 'scenario' || l.kind === 'gesture') && levelStatus(progress, l) !== 'done',
   );
   if (!next) return null;
   return { label: last ? `下一課：${next.title}` : `從第一課開始：${next.title}`, levelId: next.id };
@@ -180,6 +192,7 @@ function Root() {
     };
   }, []);
   const lesson = stack && 'lessonId' in stack ? LESSONS[stack.lessonId] : undefined;
+  const gestureLevel = stack && 'levelId' in stack ? LEVELS[stack.levelId] : undefined;
   // 只在網頁端強制登入 —— 原生端還沒有真正的 LIFF 串接，硬擋只會讓原生版整個開不了機。
   const showGate = Platform.OS === 'web' && authChecked && lineUser === null;
 
@@ -208,6 +221,12 @@ function Root() {
     }
     if (level.kind === 'practice') {
       setStack({ name: 'practice' });
+      return;
+    }
+    if (level.kind === 'gesture') {
+      // 從還沒猜對的那一題開始；全部猜過了就從頭再玩一次。
+      const done = progress.lessons[level.id]?.stagesDone ?? 0;
+      setStack({ name: 'gesture', levelId: level.id, startIndex: done < level.script.challenges.length ? done : 0 });
       return;
     }
     if (level.kind !== 'scenario') return;
@@ -239,9 +258,32 @@ function Root() {
             />
           ) : null}
 
+          {stack.name === 'gesture' && gestureLevel?.kind === 'gesture' ? (
+            <GestureChallengeRunner
+              key={gestureLevel.id}
+              script={gestureLevel.script}
+              startIndex={stack.startIndex}
+              onChallengeDone={(i) => recordStageDone(progress, gestureLevel.id, i).then(setProgress)}
+              onFinish={() => setStack({ name: 'gestureRealDevice', levelId: gestureLevel.id })}
+              onExit={() => setStack(null)}
+            />
+          ) : null}
+
+          {stack.name === 'gestureRealDevice' && gestureLevel?.kind === 'gesture' ? (
+            <RealDeviceScreen
+              realDevice={gestureLevel.script.realDevice}
+              confirmLabel="我做到了"
+              onConfirm={() => {
+                recordRealDevice(progress, gestureLevel.id).then(setProgress);
+                setStack(null);
+              }}
+              onLater={() => setStack(null)}
+            />
+          ) : null}
+
           {stack.name === 'realDevice' && lesson ? (
             <RealDeviceScreen
-              lesson={lesson}
+              realDevice={lesson.realDevice}
               onConfirm={() => {
                 // 只有真的在自己手機上做到才記。跳過不算，也不會被追究。
                 if (!progress.lessons[lesson.id]?.realDeviceDone) awardRealDevice(lesson.id).then(setPoints);
@@ -323,12 +365,22 @@ function Root() {
   );
 }
 
+/**
+ * 網址帶 ?gesturelab=1 時只顯示手勢測試頁（specs/v2/P5-gestures.md §5.3），給開發者和志工在實機上排查。
+ * 不經過登入：那一頁沒有任何個人資料，而且要能在還沒設定 LINE 登入的測試機上打開。
+ */
+function isGestureLab(): boolean {
+  return (
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('gesturelab') === '1'
+  );
+}
+
 export default function App() {
   return (
     <ScaleProvider>
-      <KeyboardViewport>
-        <Root />
-      </KeyboardViewport>
+      <KeyboardViewport>{isGestureLab() ? <GestureLab /> : <Root />}</KeyboardViewport>
     </ScaleProvider>
   );
 }

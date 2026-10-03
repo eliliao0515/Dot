@@ -26,6 +26,9 @@ const WALLET_CONTENT: WalletContent = {
   passwordLength: PAY_PASSWORD_LENGTH,
   passwordHint: PAY_PASSWORD_HINT,
 };
+import EdgeSwipeBack from '../sim/EdgeSwipeBack';
+import { DEFAULT_GESTURE_THRESHOLDS } from '../content/gestures';
+import { useHistoryBack } from '../ui/useHistoryBack';
 
 const UNBUILT = '這個功能還沒做好。';
 
@@ -115,6 +118,39 @@ export default function LineSimulatorScreen({ user, onExit }: { user: LineUser |
 
   const room = roomId ? SANDBOX_ROOMS.find((r) => r.id === roomId) : undefined;
 
+  // 在聊天室裡按手機或瀏覽器的上一頁，回到聊天列表，而不是整個離開模擬器。
+  useHistoryBack(roomId !== null, () => setRoomId(null));
+
+  // 聊天列表＋底部分頁。滑開聊天室時露出來的也是這一個。
+  const home = (
+    <>
+      <View style={{ flex: 1 }}>
+        {tab === 'chats' ? (
+          <ChatsListScreen
+            rooms={SANDBOX_ROOMS.map((r) => ({
+              id: r.id,
+              title: r.contactName,
+              preview: r.preview,
+              time: r.time,
+              avatarGlyph: r.avatarGlyph,
+              avatarColor: r.avatarColor,
+              emphasized: false,
+              unread: false,
+              actionable: true,
+            }))}
+            base={base}
+            onOpenRoom={setRoomId}
+          />
+        ) : null}
+        {tab === 'home' && user ? (
+          <HomeProfileScreen user={user} base={base} actionLabel="離開 LINE 模擬器" onLogout={onExit} />
+        ) : null}
+      </View>
+      {/* Wallet 分頁由 WalletApp 自己畫分頁列，這裡就不重複畫。 */}
+      {tab === 'wallet' ? null : tabBar}
+    </>
+  );
+
   function handleCallEnd(result: CallResult) {
     setCall(null);
     if (!room) return;
@@ -129,42 +165,25 @@ export default function LineSimulatorScreen({ user, onExit }: { user: LineUser |
     <View style={s.wrap}>
       <View style={{ flex: 1 }}>
         {room ? (
-          <LineChatScreen
-            key={room.id}
-            contact={room.contactName}
-            incoming={[
-              ...room.messages.map((bubble) => ({ bubble, contact: room.contactName })),
-              ...(extras[room.id] ?? []),
-            ]}
-            onAction={handleAction}
-            onPressBack={() => setRoomId(null)}
-          />
+          // 跟真 iPhone 一樣，從左邊緣往右滑回到聊天列表（specs/v2/P5-gestures.md）。
+          <EdgeSwipeBack
+            thresholds={DEFAULT_GESTURE_THRESHOLDS.edgeSwipe}
+            underlay={home}
+            onSwipeBack={() => setRoomId(null)}
+          >
+            <LineChatScreen
+              key={room.id}
+              contact={room.contactName}
+              incoming={[
+                ...room.messages.map((bubble) => ({ bubble, contact: room.contactName })),
+                ...(extras[room.id] ?? []),
+              ]}
+              onAction={handleAction}
+              onPressBack={() => setRoomId(null)}
+            />
+          </EdgeSwipeBack>
         ) : (
-          <>
-            <View style={{ flex: 1 }}>
-              {tab === 'chats' ? (
-                <ChatsListScreen
-                  rooms={SANDBOX_ROOMS.map((r) => ({
-                    id: r.id,
-                    title: r.contactName,
-                    preview: r.preview,
-                    time: r.time,
-                    avatarGlyph: r.avatarGlyph,
-                    avatarColor: r.avatarColor,
-                    emphasized: false,
-                    unread: false,
-                    actionable: true,
-                  }))}
-                  base={base}
-                  onOpenRoom={setRoomId}
-                />
-              ) : null}
-              {tab === 'home' && user ? (
-                <HomeProfileScreen user={user} base={base} actionLabel="離開 LINE 模擬器" onLogout={onExit} />
-              ) : null}
-            </View>
-            {tab === 'wallet' ? null : tabBar}
-          </>
+          home
         )}
 
         {/* 錢包一直掛著（只是藏起來），切去別的分頁再回來，餘額和紀錄還在。 */}
