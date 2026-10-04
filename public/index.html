@@ -25,8 +25,17 @@
         height: 100%;
         overflow: hidden;
         overscroll-behavior: none;
-        -webkit-text-size-adjust: 100%;
-        text-size-adjust: 100%;
+      }
+      /*
+        文字大小寫死，不跟手機的系統字級／瀏覽器文字縮放變化（2026-10-04 使用者決定：
+        字被放太大會把按鈕擠出畫面）。每個元素都設，避免哪一層漏掉。
+      */
+      *,
+      *::before,
+      *::after {
+        -webkit-text-size-adjust: 100% !important;
+        -moz-text-size-adjust: 100% !important;
+        text-size-adjust: 100% !important;
       }
       body {
         position: fixed;

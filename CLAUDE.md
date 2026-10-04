@@ -123,7 +123,7 @@ v2 的 HIG 外殼：淺灰底 `#F2F2F7`、白色卡片加描邊、靛藍當強�
 - 麥克風鍵 `hitSlop: 14` + `pressRetentionOffset: 60`，手抖放開時手指滑掉不會失敗
 - 長按門檻 `Lesson.target.minMs = 400`，寫在腳本資料裡，真機測試時直接調
 - Android `includeFontPadding: false`，所有 `Text` 明確指定 `lineHeight`，否則兩平台中文行高會差好幾像素
-- **雙層字級策略**：模擬層 `allowFontScaling={false}`，尺寸只由 `useScale()` 的 App 內參數決定，這樣畫面才跟他真手機一致；外殼層 `systemScaling` 放行系統縮放，讓開了大字的人真的看到大字。統一走 `src/ui/Scale.tsx` 的 `T` 元件，不要直接用 `Text`
+- **文字大小一律寫死，不跟系統字級**（2026-10-04 使用者決定，取代原本的「雙層字級策略」）：實際使用時開了系統大字的長輩字被放太大，按鈕被擠出畫面按不到。`T` 元件一律 `allowFontScaling={false}`（`systemScaling` 參數保留但無作用），`TextInput` 也要明確寫 `allowFontScaling={false}`，網頁版在 `public/index.html` 對所有元素設 `text-size-adjust: 100%`。尺寸只由 `useScale()` 決定。統一走 `src/ui/Scale.tsx` 的 `T` 元件，不要直接用 `Text`。看不清楚的問題改用 App 內字級或另外教調系統字級，不要再放行系統縮放
 - 全面用描邊不用陰影（低對比敏感度看得清楚，也避開 iOS `shadowOffset` 與 Android `elevation` 對不起來）
 - 引導動畫尊重 `AccessibilityInfo.isReduceMotionEnabled()`
 - **LINE 情境裡**手勢只用「點一下」和「長按」。雙擊、拖曳、滑動對關節退化的人很困難，所以 v2 的手勢單元讓**每種手勢獨立一關**專門教（D4，2026-10-04 使用者確認），不混進 LINE 情境的過關路徑。判定門檻（毫秒、距離、間隔）一律寫在腳本資料裡

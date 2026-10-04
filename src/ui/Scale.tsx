@@ -29,20 +29,20 @@ export function useScale() {
 
 type TProps = TextProps & {
   /**
-   * 模擬層一律傳 false：畫面尺寸只由我們的字級參數決定，
-   * 這樣長輩看到的模擬畫面才會跟他自己手機上的一致。
-   * 教學外殼層留 true，讓開了系統大字的人真的看得到大字。
+   * 2026-10-04 起不再有作用（保留參數只是為了不用改上百個呼叫處）。
+   * 原本外殼層會放行系統字級，但實際使用時開了系統大字的長輩字被放太大、按鈕被擠出畫面按不到，
+   * 使用者決定：所有文字大小一律寫死，不跟系統字級變化。
    */
   systemScaling?: boolean;
 };
 
-export function T({ systemScaling = false, style, ...rest }: TProps) {
+export function T({ systemScaling: _ignored, style, ...rest }: TProps) {
   return (
     <Text
-      allowFontScaling={systemScaling}
-      maxFontSizeMultiplier={systemScaling ? 1.4 : 1}
-      style={StyleSheet.flatten([textBase, style])}
       {...rest}
+      allowFontScaling={false}
+      maxFontSizeMultiplier={1}
+      style={StyleSheet.flatten([textBase, style])}
     />
   );
 }
